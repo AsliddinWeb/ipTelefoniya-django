@@ -8,7 +8,7 @@ DEBUG = True
 # Environment variables dan olinadi
 SECRET_KEY = os.getenv('SECRET_KEY', SECRET_KEY)
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ['*']
 
 # Database - PostgreSQL for production with psycopg2-binary
 DATABASES = {
