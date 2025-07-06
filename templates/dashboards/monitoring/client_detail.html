@@ -1,0 +1,650 @@
+{% extends 'dashboards/monitoring/base_monitoring.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">{{ client.company_name }} - Tafsilotlar</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Monitoring</a></li>
+                        <li class="breadcrumb-item active">{{ client.company_name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Info Banner -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-primary-subtle border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-lg">
+                                <div class="avatar-title rounded-circle bg-primary">
+                                    <i class="ri-building-line fs-2 text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">{{ client.company_name }}</h5>
+                            <p class="text-muted mb-2">{{ client.contact_person }} - {{ client.phone }}</p>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-{% if client.is_active_subscription %}success{% else %}danger{% endif %}">
+                                    {{ client.get_subscription_type_display }} obuna
+                                </span>
+                                <span class="badge bg-{% if client.user.is_active %}success{% else %}secondary{% endif %}">
+                                    {% if client.user.is_active %}Faol{% else %}Nofaol{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="window.location.reload()">
+                                    <i class="ri-refresh-line me-1"></i>Yangilash
+                                </button>
+                                <div class="dropdown">
+                                    <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ri-more-fill me-1"></i>Amallar
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="/dashboard/calls/?client_id={{ client.id }}">
+                                            <i class="ri-phone-line me-2"></i>Barcha qo'ng'iroqlar</a></li>
+                                        <li><a class="dropdown-item" href="/dashboard/operators/?client_id={{ client.id }}">
+                                            <i class="ri-team-line me-2"></i>Operatorlar</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportData()">
+                                            <i class="ri-download-line me-2"></i>Ma'lumotni eksport</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Jami qo'ng'iroqlar</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-primary-subtle rounded fs-3">
+                                    <i class="ri-phone-line text-primary"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                <span class="counter-value" data-target="{{ stats.total_calls }}">{{ stats.total_calls }}</span>
+                            </h4>
+                            <span class="badge bg-primary-subtle text-primary mb-0">Bugun</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Javob berilgan</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-success-subtle rounded fs-3">
+                                    <i class="ri-check-line text-success"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                <span class="counter-value" data-target="{{ stats.answered_calls }}">{{ stats.answered_calls }}</span>
+                            </h4>
+                            <span class="badge bg-success-subtle text-success mb-0">Muvaffaqiyatli</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Javobsiz</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-warning-subtle rounded fs-3">
+                                    <i class="ri-close-line text-warning"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                <span class="counter-value" data-target="{{ stats.missed_calls }}">{{ stats.missed_calls }}</span>
+                            </h4>
+                            <span class="badge bg-warning-subtle text-warning mb-0">Javobsiz</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Muvaffaqiyat %</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-info-subtle rounded fs-3">
+                                    <i class="ri-percent-line text-info"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                <span class="counter-value" data-target="{{ stats.answer_rate }}">{{ stats.answer_rate }}</span>%
+                            </h4>
+                            <span class="badge bg-info-subtle text-info mb-0">Umumiy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Tables Row -->
+    <div class="row">
+        <!-- Daily Chart -->
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h5 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-bar-chart-line me-2"></i>7 kunlik statistika
+                        </h5>
+                        <div class="flex-shrink-0">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <input type="radio" class="btn-check" name="chartPeriod" id="week" checked>
+                                <label class="btn btn-outline-primary" for="week">Hafta</label>
+                                
+                                <input type="radio" class="btn-check" name="chartPeriod" id="month">
+                                <label class="btn btn-outline-primary" for="month">Oy</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="dailyChart" style="height: 350px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hourly Chart -->
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-time-line me-2"></i>Bugungi soatlik taqsimot
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="hourlyChart" style="height: 350px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operators Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h5 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-team-line me-2"></i>Operatorlar ({{ operators_count }})
+                        </h5>
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-success me-2">{{ active_operators }} faol</span>
+                            <span class="badge bg-secondary">{{ operators_count|add:"-"|add:active_operators }} nofaol</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive table-card">
+                        <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                            <thead class="text-muted table-light">
+                                <tr>
+                                    <th scope="col">Operator</th>
+                                    <th scope="col">Operator ID</th>
+                                    <th scope="col">Bo'lim</th>
+                                    <th scope="col">Bugungi qo'ng'iroqlar</th>
+                                    <th scope="col">Muvaffaqiyat %</th>
+                                    <th scope="col">Holati</th>
+                                    <th scope="col">Oxirgi faollik</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for op in operators %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <div class="avatar-xs">
+                                                    <div class="avatar-title rounded-circle {% if op.status == 'active' %}bg-success{% else %}bg-secondary{% endif %}">
+                                                        <i class="ri-user-line text-white"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-0">{{ op.operator.full_name|default:op.operator.user.username }}</h6>
+                                                <small class="text-muted">{{ op.operator.user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <code class="text-primary">{{ op.operator.operator_id }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">{{ op.operator.department|default:"Belgilanmagan" }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fw-medium">{{ op.today_calls }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <span class="text-{% if op.success_rate >= 80 %}success{% elif op.success_rate >= 50 %}warning{% else %}danger{% endif %} fw-medium">
+                                                {{ op.success_rate }}%
+                                            </span>
+                                            <div class="progress ms-2" style="width: 40px; height: 4px;">
+                                                <div class="progress-bar bg-{% if op.success_rate >= 80 %}success{% elif op.success_rate >= 50 %}warning{% else %}danger{% endif %}" 
+                                                     style="width: {{ op.success_rate }}%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if op.status == 'active' %}
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="ri-check-line me-1"></i>Faol
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary">
+                                                <i class="ri-close-line me-1"></i>Nofaol
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="text-muted">
+                                            {{ op.operator.user.last_login|date:"d.m.Y H:i"|default:"Hech qachon" }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="ri-user-line fs-1 d-block mb-2"></i>
+                                            Hozircha operatorlar yo'q
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Calls -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h5 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-phone-line me-2"></i>So'nggi qo'ng'iroqlar
+                        </h5>
+                        <div class="flex-shrink-0">
+                            <a href="/dashboard/calls/?client_id={{ client.id }}" class="btn btn-soft-primary btn-sm">
+                                <i class="ri-eye-line me-1"></i>Barchasini ko'rish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive table-card">
+                        <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                            <thead class="text-muted table-light">
+                                <tr>
+                                    <th scope="col">Vaqt</th>
+                                    <th scope="col">Qo'ng'iroq qiluvchi</th>
+                                    <th scope="col">Qabul qiluvchi</th>
+                                    <th scope="col">Davomiyligi</th>
+                                    <th scope="col">Holati</th>
+                                    <th scope="col">Yo'nalishi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for call in recent_calls %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <h6 class="mb-0">{{ call.time }}</h6>
+                                            <small class="text-muted">{{ call.date }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <div class="avatar-xs">
+                                                    <div class="avatar-title rounded-circle bg-light text-primary">
+                                                        <i class="ri-user-line"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-0">{{ call.caller_name|default:call.src }}</h6>
+                                                <small class="text-muted">{{ call.src }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-medium">{{ call.dst }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="{% if call.duration > 60 %}text-success{% elif call.duration > 0 %}text-warning{% else %}text-muted{% endif %}">
+                                            {{ call.duration_formatted }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if call.disposition == 'ANSWERED' %}
+                                            <span class="badge bg-success-subtle text-success">Javob berildi</span>
+                                        {% elif call.disposition == 'NO ANSWER' %}
+                                            <span class="badge bg-warning-subtle text-warning">Javobsiz</span>
+                                        {% elif call.disposition == 'FAILED' %}
+                                            <span class="badge bg-danger-subtle text-danger">Muvaffaqiyatsiz</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary">{{ call.disposition }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ call.call_direction_uz }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="ri-phone-line fs-1 d-block mb-2"></i>
+                                            Bugun qo'ng'iroqlar yo'q
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+
+{% block extra_css %}
+<style>
+.card-animate {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-animate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.counter-value {
+    transition: all 0.3s ease;
+}
+
+.avatar-lg {
+    width: 4rem;
+    height: 4rem;
+}
+
+.avatar-sm {
+    width: 2rem;
+    height: 2rem;
+}
+
+.avatar-xs {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.avatar-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.progress {
+    background-color: #e9ecef;
+}
+
+.badge {
+    font-size: 0.6875rem;
+    font-weight: 500;
+}
+
+.table-card {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.fs-2 {
+    font-size: 1.5rem;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'assets/libs/apexcharts/apexcharts.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Counter animation
+    const counters = document.querySelectorAll('.counter-value');
+    
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target')) || 0;
+        const increment = target / 50;
+        let current = 0;
+        
+        const updateCounter = () => {
+            if (current < target) {
+                current += increment;
+                counter.textContent = Math.floor(current);
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target;
+            }
+        };
+        
+        updateCounter();
+    });
+
+    // Daily Chart
+    const dailyChartData = {{ chart_data.daily|safe }};
+    
+    const dailyOptions = {
+        series: [{
+            name: 'Jami qo\'ng\'iroqlar',
+            data: dailyChartData.map(item => item.total_calls)
+        }, {
+            name: 'Javob berilgan',
+            data: dailyChartData.map(item => item.answered_calls)
+        }],
+        chart: {
+            type: 'bar',
+            height: 350,
+            toolbar: {
+                show: false
+            }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                columnWidth: '55%',
+                endingShape: 'rounded'
+            },
+        },
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            show: true,
+            width: 2,
+            colors: ['transparent']
+        },
+        xaxis: {
+            categories: dailyChartData.map(item => item.date),
+        },
+        yaxis: {
+            title: {
+                text: 'Qo\'ng\'iroqlar soni'
+            }
+        },
+        fill: {
+            opacity: 1
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return val + " ta qo'ng'iroq"
+                }
+            }
+        },
+        colors: ['#405189', '#0ab39c']
+    };
+
+    const dailyChart = new ApexCharts(document.querySelector("#dailyChart"), dailyOptions);
+    dailyChart.render();
+
+    // Hourly Chart
+    const hourlyChartData = {{ chart_data.hourly|safe }};
+    
+    const hourlyOptions = {
+        series: [{
+            name: 'Qo\'ng\'iroqlar',
+            data: hourlyChartData.map(item => item.calls)
+        }],
+        chart: {
+            type: 'line',
+            height: 350,
+            toolbar: {
+                show: false
+            }
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 3
+        },
+        xaxis: {
+            categories: hourlyChartData.map(item => item.hour),
+            title: {
+                text: 'Soatlar'
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Qo\'ng\'iroqlar soni'
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return val + " ta qo'ng'iroq"
+                }
+            }
+        },
+        colors: ['#f06548']
+    };
+
+    const hourlyChart = new ApexCharts(document.querySelector("#hourlyChart"), hourlyOptions);
+    hourlyChart.render();
+
+    // Chart period toggle
+    document.querySelectorAll('input[name="chartPeriod"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                // Load data for selected period
+                loadChartData(this.id);
+            }
+        });
+    });
+});
+
+// Load chart data via AJAX
+function loadChartData(period) {
+    fetch(`/monitoring/client/{{ client.id }}/chart-data/?period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update charts with new data
+                console.log('New chart data:', data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Chart data loading error:', error);
+        });
+}
+
+// Export data function
+function exportData() {
+    const exportUrl = `/monitoring/client/{{ client.id }}/export/`;
+    window.open(exportUrl, '_blank');
+}
+
+// Auto refresh every 10 minutes
+setTimeout(function() {
+    window.location.reload();
+}, 600000);
+</script>
+{% endblock %}

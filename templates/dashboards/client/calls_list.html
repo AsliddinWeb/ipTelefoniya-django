@@ -1,0 +1,647 @@
+{% extends 'dashboards/client/base_client.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'admin/libs/flatpickr/flatpickr.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+.call-status-answered { color: #28a745; }
+.call-status-failed { color: #dc3545; }
+.call-status-busy { color: #ffc107; }
+.call-status-no-answer { color: #6c757d; }
+
+.table-calls tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.filter-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.filter-card .form-control, .filter-card .form-select {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.stats-card {
+    border-left: 4px solid #007bff;
+}
+
+.export-btn {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+    color: white;
+}
+
+.export-btn:hover {
+    background: linear-gradient(45deg, #218838, #1ea085);
+    color: white;
+}
+
+.duration-display {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+.page-numbers {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.page-numbers li {
+    margin: 0 2px;
+}
+
+.direction-icon {
+    font-size: 0.9em;
+}
+
+.call-row {
+    transition: all 0.3s ease;
+}
+
+.call-row:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">{{ title }}</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'dashboard' %}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item active">Qo'ng'iroqlar</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Jami qo'ng'iroqlar</p>
+                            <h4 class="mb-0">{{ filtered_stats.total_calls|default:0 }}</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-primary-subtle rounded fs-3">
+                                    <i class="ri-phone-line text-primary"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Javob berildi</p>
+                            <h4 class="mb-0 call-status-answered">{{ filtered_stats.answered_calls|default:0 }}</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-success-subtle rounded fs-3">
+                                    <i class="ri-check-line text-success"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Rad etildi</p>
+                            <h4 class="mb-0 call-status-failed">{{ filtered_stats.missed_calls|default:0 }}</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-danger-subtle rounded fs-3">
+                                    <i class="ri-close-line text-danger"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Muvaffaqiyat</p>
+                            <h4 class="mb-0">{{ filtered_stats.answer_rate|default:0 }}%</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-warning-subtle rounded fs-3">
+                                    <i class="ri-percent-line text-warning"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card filter-card">
+                <div class="card-body">
+                    <form method="get" class="row g-3" id="filterForm">
+                        <div class="col-md-3">
+                            <label class="form-label">Boshlanish sanasi</label>
+                            <input type="date" class="form-control" name="start_date" 
+                                   value="{{ current_filters.start_date }}" id="start_date">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Tugash sanasi</label>
+                            <input type="date" class="form-control" name="end_date" 
+                                   value="{{ current_filters.end_date }}" id="end_date">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Qo'ng'iroq qiluvchi</label>
+                            <input type="text" class="form-control" name="src" 
+                                   value="{{ current_filters.src }}" 
+                                   placeholder="Raqam yoki nom">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Qabul qiluvchi</label>
+                            <input type="text" class="form-control" name="dst" 
+                                   value="{{ current_filters.dst }}" 
+                                   placeholder="Raqam">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Holati</label>
+                            <select class="form-select" name="disposition">
+                                {% for value, label in disposition_choices %}
+                                <option value="{{ value }}" 
+                                    {% if value == current_filters.disposition %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Yo'nalishi</label>
+                            <select class="form-select" name="direction">
+                                {% for value, label in direction_choices %}
+                                <option value="{{ value }}" 
+                                    {% if value == current_filters.direction %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Qidirish</label>
+                            <input type="text" class="form-control" name="search" 
+                                   value="{{ current_filters.search }}" 
+                                   placeholder="Raqam yoki nom">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sahifada</label>
+                            <select class="form-select" name="per_page">
+                                {% for choice in per_page_choices %}
+                                <option value="{{ choice }}" 
+                                    {% if choice == current_filters.per_page %}selected{% endif %}>
+                                    {{ choice }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="submit" class="btn btn-light">
+                                    <i class="ri-search-line me-1"></i>Qidirish
+                                </button>
+                                <a href="{% url 'client_calls_list' %}" class="btn btn-outline-light">
+                                    <i class="ri-refresh-line me-1"></i>Tozalash
+                                </a>
+                                {% if calls %}
+                                <a href="{{ export_url }}" class="btn export-btn">
+                                    <i class="ri-download-line me-1"></i>CSV Eksport
+                                </a>
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-light" onclick="setTodayFilter()">
+                                    <i class="ri-calendar-line me-1"></i>Bugun
+                                </button>
+                                <button type="button" class="btn btn-outline-light" onclick="setWeekFilter()">
+                                    <i class="ri-calendar-week-line me-1"></i>Bu hafta
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calls Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h4 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-list-check me-2"></i>Qo'ng'iroqlar ro'yxati
+                            {% if filtered_total %}
+                                <span class="badge bg-primary-subtle text-primary ms-2">
+                                    {{ filtered_total }} ta
+                                </span>
+                            {% endif %}
+                        </h4>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="btn btn-soft-primary btn-sm" 
+                                    onclick="window.location.reload()">
+                                <i class="ri-refresh-line me-1"></i>Yangilash
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    {% if calls %}
+                    <div class="table-responsive">
+                        <table class="table table-calls table-borderless table-centered align-middle table-nowrap mb-0">
+                            <thead class="text-muted table-light">
+                                <tr>
+                                    <th scope="col" style="width: 60px;">#</th>
+                                    <th scope="col" style="width: 130px;">Sana/Vaqt</th>
+                                    <th scope="col" style="width: 200px;">Qo'ng'iroq qiluvchi</th>
+                                    <th scope="col" style="width: 150px;">Qabul qiluvchi</th>
+                                    <th scope="col" style="width: 120px;">Davomiyligi</th>
+                                    <th scope="col" style="width: 120px;">Holati</th>
+                                    <th scope="col" style="width: 100px;">Yo'nalishi</th>
+                                    <th scope="col" style="width: 80px;">Amallar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for call in calls %}
+                                <tr class="call-row">
+                                    <td>{{ calls.start_index|add:forloop.counter0 }}</td>
+                                    <td>
+                                        <div>
+                                            <strong class="d-block">{{ call.date }}</strong>
+                                            <small class="text-muted">{{ call.time }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong class="d-block">{{ call.caller_name|default:call.src }}</strong>
+                                            <small class="text-muted">{{ call.src }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>{{ call.dst }}</strong>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong class="d-block duration-display">{{ call.duration_formatted|default:"0s" }}</strong>
+                                            {% if call.billsec_formatted and call.billsec_formatted != call.duration_formatted %}
+                                            <small class="text-muted">Hisob: {{ call.billsec_formatted }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if call.disposition == 'ANSWERED' %}
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="ri-check-line me-1"></i>Javob berildi
+                                            </span>
+                                        {% elif call.disposition == 'NO ANSWER' %}
+                                            <span class="badge bg-secondary-subtle text-secondary">
+                                                <i class="ri-phone-off-line me-1"></i>Javob berilmadi
+                                            </span>
+                                        {% elif call.disposition == 'BUSY' %}
+                                            <span class="badge bg-warning-subtle text-warning">
+                                                <i class="ri-forbid-line me-1"></i>Band
+                                            </span>
+                                        {% elif call.disposition == 'FAILED' %}
+                                            <span class="badge bg-danger-subtle text-danger">
+                                                <i class="ri-close-line me-1"></i>Muvaffaqiyatsiz
+                                            </span>
+                                        {% elif call.disposition == 'CONGESTION' %}
+                                            <span class="badge bg-info-subtle text-info">
+                                                <i class="ri-signal-wifi-off-line me-1"></i>Tarmoq yuklanishi
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">
+                                                <i class="ri-question-line me-1"></i>{{ call.disposition|default:"Noma'lum" }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if call.call_direction == 'incoming' %}
+                                            <span class="badge bg-info-subtle text-info">
+                                                <i class="ri-arrow-down-line me-1 direction-icon"></i>Kiruvchi
+                                            </span>
+                                        {% elif call.call_direction == 'outgoing' %}
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                <i class="ri-arrow-up-line me-1 direction-icon"></i>Chiquvchi
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary">
+                                                <i class="ri-arrow-left-right-line me-1 direction-icon"></i>Ichki
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-soft-secondary btn-sm dropdown-toggle" 
+                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="ri-more-fill"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item" 
+                                                       href="#">
+                                                        <i class="ri-eye-line me-2"></i>Tafsilotlar
+                                                    </a>
+                                                </li>
+                                                {% if call.recording_file %}
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ call.recording_file }}" 
+                                                       target="_blank">
+                                                        <i class="ri-play-line me-2"></i>Yozuv
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item text-muted" href="#" onclick="copyToClipboard('{{ call.src }}')">
+                                                        <i class="ri-file-copy-line me-2"></i>Raqamni nusxalash
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if calls.has_other_pages %}
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <div class="mb-2 mb-sm-0">
+                                <small class="text-muted">
+                                    Jami {{ filtered_total }} tadan {{ calls.start_index }} - {{ calls.end_index }} ko'rsatilmoqda
+                                </small>
+                            </div>
+                            <nav aria-label="Qo'ng'iroqlar pagination">
+                                <ul class="pagination pagination-sm mb-0">
+                                    {% if calls.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                            <i class="ri-skip-back-line"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ calls.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                            <i class="ri-arrow-left-line"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+
+                                    {% for num in calls.paginator.page_range %}
+                                        {% if num == calls.number %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                        {% elif num > calls.number|add:-3 and num < calls.number|add:3 %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if calls.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ calls.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                            <i class="ri-arrow-right-line"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ calls.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                            <i class="ri-skip-forward-line"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="text-muted">
+                            <i class="ri-phone-line fs-1 d-block mb-3 text-secondary"></i>
+                            {% if current_filters.search or current_filters.src or current_filters.dst %}
+                                <h5>Qidiruv bo'yicha natija topilmadi</h5>
+                                <p class="mb-3">Filter parametrlarini o'zgartirib ko'ring</p>
+                                <a href="{% url 'client_calls_list' %}" class="btn btn-primary">
+                                    <i class="ri-refresh-line me-1"></i>Barcha filterni tozalash
+                                </a>
+                            {% else %}
+                                <h5>Qo'ng'iroqlar mavjud emas</h5>
+                                <p class="mb-3">Tanlangan davrda qo'ng'iroqlar topilmadi</p>
+                                <button type="button" class="btn btn-primary" onclick="setTodayFilter()">
+                                    <i class="ri-calendar-line me-1"></i>Bugungi qo'ng'iroqlarni ko'rish
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Yuklanmoqda...</span>
+                </div>
+                <div class="mt-2">Ma'lumotlar yuklanmoqda...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'admin/libs/flatpickr/flatpickr.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Date pickers
+    const startDatePicker = flatpickr("#start_date", {
+        dateFormat: "Y-m-d",
+        maxDate: "today"
+    });
+    
+    const endDatePicker = flatpickr("#end_date", {
+        dateFormat: "Y-m-d",
+        maxDate: "today"
+    });
+
+    // Form validation
+    const form = document.getElementById('filterForm');
+    form.addEventListener('submit', function(e) {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        
+        if (startDate && endDate && startDate > endDate) {
+            e.preventDefault();
+            alert('Boshlanish sanasi tugash sanasidan katta bo\'lishi mumkin emas');
+            return false;
+        }
+        
+        // Show loading modal
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        loadingModal.show();
+    });
+});
+
+// Quick filter functions
+function setTodayFilter() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('start_date').value = today;
+    document.getElementById('end_date').value = today;
+    document.getElementById('filterForm').submit();
+}
+
+function setWeekFilter() {
+    const today = new Date();
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    document.getElementById('start_date').value = weekAgo.toISOString().split('T')[0];
+    document.getElementById('end_date').value = today.toISOString().split('T')[0];
+    document.getElementById('filterForm').submit();
+}
+
+// Copy to clipboard function
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show toast notification
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed';
+        toast.style.top = '20px';
+        toast.style.right = '20px';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    Raqam nusxalandi: ${text}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    }, function(err) {
+        console.error('Nusxalashda xatolik: ', err);
+    });
+}
+
+// Auto refresh functionality (optional)
+let autoRefreshInterval;
+function toggleAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    } else {
+        autoRefreshInterval = setInterval(() => {
+            window.location.reload();
+        }, 30000); // 30 seconds
+    }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl + R for refresh
+    if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        window.location.reload();
+    }
+    
+    // Ctrl + F for focus search
+    if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        document.querySelector('input[name="search"]').focus();
+    }
+    
+    // Ctrl + T for today filter
+    if (e.ctrlKey && e.key === 't') {
+        e.preventDefault();
+        setTodayFilter();
+    }
+});
+
+// Table row click to view details (optional)
+document.querySelectorAll('.call-row').forEach(row => {
+    row.addEventListener('dblclick', function() {
+        const detailLink = this.querySelector('a[href*="#"]');
+        if (detailLink) {
+            window.open(detailLink.href, '_blank');
+        }
+    });
+});
+</script>
+{% endblock %}

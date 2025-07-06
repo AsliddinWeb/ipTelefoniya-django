@@ -1,5 +1,5 @@
 # apps/users/views/dashboard_views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
@@ -106,17 +106,6 @@ def admin_dashboard_view(request, user, admin_profile):
         context['pbx_error'] = str(e)
 
     return render(request, 'dashboards/admin/dashboard_admin.html', context)
-
-
-def monitoring_dashboard_view(request, user, monitoring_profile):
-    """Monitoring dashboard"""
-    context = {
-        'title': 'Monitoring Dashboard',
-        'user': user,
-        'monitoring_profile': monitoring_profile,
-    }
-
-    return render(request, 'dashboards/monitoring/dashboard_monitoring.html', context)
 
 
 def operator_dashboard_view(request, user, operator_profile):
@@ -968,14 +957,14 @@ def call_detail_view(request, call_id):
 @login_required
 def client_calls_list_view(request):
     """Client uchun qo'ng'iroqlar ro'yxati (faqat o'z operatorlariga tegishli)"""
-    if request.user.role != 'client':
-        messages.error(request, "Bu sahifaga faqat client'lar kirishi mumkin")
-        return redirect('dashboard')
+    # if request.user.role != 'client':
+    #     messages.error(request, "Bu sahifaga faqat client'lar kirishi mumkin")
+    #     return redirect('dashboard')
 
     client_profile = request.user.client_profile
-    if not client_profile:
-        messages.error(request, "Client profile topilmadi")
-        return redirect('dashboard')
+    # if not client_profile:
+    #     messages.error(request, "Client profile topilmadi")
+    #     return redirect('dashboard')
 
     context = {
         'title': 'Kompaniya qo\'ng\'iroqlari',
@@ -1541,4 +1530,507 @@ def client_calls_statistics_ajax(request):
             'error': str(e)
         }, status=500)
 
+
+def monitoring_dashboard_view(request, user, monitoring_profile):
+    """Monitoring dashboard with client monitoring and system statistics"""
+    context = {
+        'title': 'Monitoring Dashboard',
+        'user': user,
+        'monitoring_profile': monitoring_profile,
+    }
+
+    try:
+        today = timezone.now().date()
+        yesterday = today - timedelta(days=1)
+        last_week = today - timedelta(days=7)
+
+        # Barcha clientlar ro'yxati
+        clients = ClientProfile.objects.select_related('user').prefetch_related('operators').all()
+
+        # System wide statistics
+        total_users = User.objects.count()
+        total_clients = clients.count()
+        total_operators = OperatorProfile.objects.count()
+        active_clients = clients.filter(user__is_active=True, is_active_subscription=True).count()
+        active_operators = OperatorProfile.objects.filter(user__is_active=True).count()
+
+        # Har bir client uchun statistika hisoblash
+        clients_with_stats = []
+
+        for client in clients:
+            # Client operatorlari
+            operators = client.operators.all()
+            operators_count = operators.count()
+            active_operators_count = operators.filter(user__is_active=True).count()
+
+            # Operatorlarning ID lari
+            operator_ids = [op.operator_id for op in operators if op.operator_id]
+
+            # Bugungi qo'ng'iroqlar statistikasi
+            total_calls = 0
+            answered_calls = 0
+            success_rate = 0
+            avg_duration = 0
+
+            if operator_ids:
+                try:
+                    # PBX dan bugungi ma'lumotlarni olish
+                    cdr_response = pbx_service.get_cdr_data(
+                        start_date=today.strftime('%Y-%m-%d'),
+                        end_date=today.strftime('%Y-%m-%d')
+                    )
+                    calls_data = pbx_service.process_cdr_data(cdr_response)
+
+                    if calls_data['success']:
+                        all_calls = calls_data['calls']
+
+                        # Faqat client operatorlariga tegishli qo'ng'iroqlar
+                        client_calls = [
+                            call for call in all_calls
+                            if call.get('src') in operator_ids or call.get('dst') in operator_ids
+                        ]
+
+                        total_calls = len(client_calls)
+                        answered_calls = len([
+                            call for call in client_calls
+                            if call.get('disposition') == 'ANSWERED'
+                        ])
+
+                        if total_calls > 0:
+                            success_rate = round((answered_calls / total_calls) * 100, 1)
+
+                        # O'rtacha qo'ng'iroq davomiyligi
+                        if answered_calls > 0:
+                            total_duration = sum([
+                                call.get('billsec', 0) for call in client_calls
+                                if call.get('disposition') == 'ANSWERED'
+                            ])
+                            avg_duration = round(total_duration / answered_calls, 1)
+
+                except Exception as e:
+                    logger.warning(f"PBX ma'lumot olishda xatolik {client.company_name}: {str(e)}")
+
+            # Obuna holati
+            subscription_status = 'active'
+            days_left = 0
+            if client.subscription_end:
+                days_left = (client.subscription_end - today).days
+                if days_left <= 0:
+                    subscription_status = 'expired'
+                elif days_left <= 7:
+                    subscription_status = 'warning'
+
+            # Client ma'lumotlarini to'ldirish
+            client_data = {
+                'id': client.id,
+                'company_name': client.company_name,
+                'contact_person': client.contact_person,
+                'phone': client.phone,
+                'operators_count': operators_count,
+                'active_operators': active_operators_count,
+                'total_calls': total_calls,
+                'answered_calls': answered_calls,
+                'missed_calls': total_calls - answered_calls,
+                'success_rate': success_rate,
+                'avg_duration': avg_duration,
+                'subscription_type': client.get_subscription_type_display() if client.subscription_type else 'Noma\'lum',
+                'subscription_end': client.subscription_end,
+                'subscription_status': subscription_status,
+                'days_left': days_left,
+                'is_active': client.user.is_active and client.is_active_subscription,
+                'last_activity': client.user.last_login,
+            }
+
+            clients_with_stats.append(client_data)
+
+        # Umumiy tizim statistikasi
+        total_calls_today = sum([c['total_calls'] for c in clients_with_stats])
+        total_answered_today = sum([c['answered_calls'] for c in clients_with_stats])
+        total_missed_today = total_calls_today - total_answered_today
+
+        overall_success_rate = 0
+        if total_calls_today > 0:
+            overall_success_rate = round((total_answered_today / total_calls_today) * 100, 1)
+
+        # Kechagi ma'lumotlar (taqqoslash uchun)
+        yesterday_stats = {
+            'total_calls': 0,
+            'answered_calls': 0,
+            'success_rate': 0
+        }
+
+        try:
+            yesterday_response = pbx_service.get_cdr_data(
+                start_date=yesterday.strftime('%Y-%m-%d'),
+                end_date=yesterday.strftime('%Y-%m-%d')
+            )
+            yesterday_data = pbx_service.process_cdr_data(yesterday_response)
+
+            if yesterday_data['success']:
+                # Barcha clientlarning operatorlari
+                all_operator_ids = []
+                for client in clients:
+                    all_operator_ids.extend([
+                        op.operator_id for op in client.operators.all() if op.operator_id
+                    ])
+
+                yesterday_calls = [
+                    call for call in yesterday_data['calls']
+                    if call.get('src') in all_operator_ids or call.get('dst') in all_operator_ids
+                ]
+
+                yesterday_stats['total_calls'] = len(yesterday_calls)
+                yesterday_stats['answered_calls'] = len([
+                    call for call in yesterday_calls
+                    if call.get('disposition') == 'ANSWERED'
+                ])
+
+                if yesterday_stats['total_calls'] > 0:
+                    yesterday_stats['success_rate'] = round(
+                        (yesterday_stats['answered_calls'] / yesterday_stats['total_calls']) * 100, 1
+                    )
+
+        except Exception as e:
+            logger.warning(f"Kechagi ma'lumotlar olishda xatolik: {str(e)}")
+
+        # Growth calculations
+        def calculate_growth(today_val, yesterday_val):
+            if yesterday_val == 0:
+                return 100 if today_val > 0 else 0
+            return round(((today_val - yesterday_val) / yesterday_val) * 100, 1)
+
+        # Obuna tugash ogohlantirishi
+        expiring_soon = len([
+            c for c in clients_with_stats
+            if c['subscription_status'] in ['warning', 'expired']
+        ])
+
+        # Eng faol clientlar (top 5)
+        top_clients = sorted(
+            clients_with_stats,
+            key=lambda x: x['total_calls'],
+            reverse=True
+        )[:5]
+
+        # Recent activities (oxirgi faoliyatlar)
+        recent_activities = []
+
+        # Yangi ro'yxatdan o'tgan foydalanuvchilar
+        new_users_today = User.objects.filter(date_joined__date=today)
+        for user in new_users_today:
+            recent_activities.append({
+                'type': 'new_user',
+                'user': user.get_full_name() or user.username,
+                'role': user.get_role_display(),
+                'time': user.date_joined,
+                'description': f"Yangi {user.get_role_display().lower()} ro'yxatdan o'tdi"
+            })
+
+        # Obunasi tugagan clientlar
+        expired_today = clients.filter(subscription_end=today)
+        for client in expired_today:
+            recent_activities.append({
+                'type': 'subscription_expired',
+                'user': client.company_name,
+                'time': timezone.now(),
+                'description': f"Obuna muddati tugadi"
+            })
+
+        # Vaqt bo'yicha tartibga solish
+        recent_activities.sort(key=lambda x: x['time'], reverse=True)
+        recent_activities = recent_activities[:10]
+
+        context.update({
+            'clients': clients_with_stats,
+            'top_clients': top_clients,
+            'recent_activities': recent_activities,
+
+            'system_stats': {
+                'total_users': total_users,
+                'total_clients': total_clients,
+                'total_operators': total_operators,
+                'active_clients': active_clients,
+                'inactive_clients': total_clients - active_clients,
+                'active_operators': active_operators,
+                'expiring_soon': expiring_soon,
+            },
+
+            'calls_stats': {
+                'total_calls_today': total_calls_today,
+                'answered_calls_today': total_answered_today,
+                'missed_calls_today': total_missed_today,
+                'success_rate_today': overall_success_rate,
+
+                # Kechagi ma'lumotlar
+                'total_calls_yesterday': yesterday_stats['total_calls'],
+                'answered_calls_yesterday': yesterday_stats['answered_calls'],
+                'success_rate_yesterday': yesterday_stats['success_rate'],
+
+                # Growth indicators
+                'calls_growth': calculate_growth(total_calls_today, yesterday_stats['total_calls']),
+                'answered_growth': calculate_growth(total_answered_today, yesterday_stats['answered_calls']),
+                'success_rate_growth': calculate_growth(overall_success_rate, yesterday_stats['success_rate']),
+            },
+
+            'date_info': {
+                'today': today,
+                'yesterday': yesterday,
+                'last_week': last_week,
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Monitoring dashboard xatolik: {str(e)}")
+        context['error'] = str(e)
+
+        # Fallback ma'lumotlar
+        context.update({
+            'clients': [],
+            'top_clients': [],
+            'recent_activities': [],
+
+            'system_stats': {
+                'total_users': 0,
+                'total_clients': 0,
+                'total_operators': 0,
+                'active_clients': 0,
+                'inactive_clients': 0,
+                'active_operators': 0,
+                'expiring_soon': 0,
+            },
+
+            'calls_stats': {
+                'total_calls_today': 0,
+                'answered_calls_today': 0,
+                'missed_calls_today': 0,
+                'success_rate_today': 0,
+                'total_calls_yesterday': 0,
+                'answered_calls_yesterday': 0,
+                'success_rate_yesterday': 0,
+                'calls_growth': 0,
+                'answered_growth': 0,
+                'success_rate_growth': 0,
+            },
+
+            'date_info': {
+                'today': timezone.now().date(),
+                'yesterday': timezone.now().date() - timedelta(days=1),
+                'last_week': timezone.now().date() - timedelta(days=7),
+            }
+        })
+
+    return render(request, 'dashboards/monitoring/dashboard_monitoring.html', context)
+
+@login_required
+def client_detail_view(request, client_id):
+    """Client tafsilotlari sahifasi"""
+    client = get_object_or_404(ClientProfile, id=client_id)
+
+    context = {
+        'title': f'{client.company_name} - Tafsilotlar',
+        'user': request.user,
+        'client': client,
+    }
+
+    try:
+        # Client operatorlari
+        operators = client.operators.select_related('user').all()
+        operator_ids = [op.operator_id for op in operators if op.operator_id]
+
+        # Sana filterlari
+        today = timezone.now().date()
+        yesterday = today - timedelta(days=1)
+        week_ago = today - timedelta(days=7)
+        month_ago = today - timedelta(days=30)
+
+        # Bugungi, kechagi, haftalik ma'lumotlar
+        stats_periods = {
+            'today': today.strftime('%Y-%m-%d'),
+            'yesterday': yesterday.strftime('%Y-%m-%d'),
+            'week': week_ago.strftime('%Y-%m-%d'),
+            'month': month_ago.strftime('%Y-%m-%d'),
+        }
+
+        all_stats = {}
+        chart_data = {
+            'daily': [],  # 7 kunlik ma'lumot
+            'hourly': [],  # Bugungi soatlik ma'lumot
+        }
+
+        if operator_ids:
+            try:
+                # Bugungi ma'lumotlar
+                today_response = pbx_service.get_cdr_data(
+                    start_date=today.strftime('%Y-%m-%d'),
+                    end_date=today.strftime('%Y-%m-%d')
+                )
+                today_data = pbx_service.process_cdr_data(today_response)
+
+                if today_data['success']:
+                    today_calls = [
+                        call for call in today_data['calls']
+                        if call.get('src') in operator_ids or call.get('dst') in operator_ids
+                    ]
+                    all_stats['today'] = pbx_service._calculate_call_statistics(today_calls)
+                else:
+                    all_stats['today'] = {}
+
+                # Haftalik ma'lumotlar (chart uchun)
+                for i in range(7):
+                    date = today - timedelta(days=i)
+                    date_str = date.strftime('%Y-%m-%d')
+
+                    try:
+                        daily_response = pbx_service.get_cdr_data(
+                            start_date=date_str,
+                            end_date=date_str
+                        )
+                        daily_data = pbx_service.process_cdr_data(daily_response)
+
+                        if daily_data['success']:
+                            daily_calls = [
+                                call for call in daily_data['calls']
+                                if call.get('src') in operator_ids or call.get('dst') in operator_ids
+                            ]
+                            daily_stats = pbx_service._calculate_call_statistics(daily_calls)
+
+                            chart_data['daily'].append({
+                                'date': date.strftime('%d.%m'),
+                                'total_calls': daily_stats.get('total_calls', 0),
+                                'answered_calls': daily_stats.get('answered_calls', 0),
+                                'success_rate': daily_stats.get('answer_rate', 0),
+                            })
+                    except:
+                        chart_data['daily'].append({
+                            'date': date.strftime('%d.%m'),
+                            'total_calls': 0,
+                            'answered_calls': 0,
+                            'success_rate': 0,
+                        })
+
+                # Chartlar uchun ma'lumotlarni teskari tartibda qo'yish
+                chart_data['daily'].reverse()
+
+                # Bugungi soatlik ma'lumotlar
+                if today_data['success'] and 'by_hour' in all_stats.get('today', {}):
+                    hourly_data = all_stats['today'].get('by_hour', {})
+                    for hour in range(24):
+                        chart_data['hourly'].append({
+                            'hour': f"{hour:02d}:00",
+                            'calls': hourly_data.get(hour, 0)
+                        })
+
+            except Exception as e:
+                logger.error(f"Client {client_id} uchun PBX ma'lumot olishda xatolik: {str(e)}")
+                all_stats['today'] = {}
+
+        # Operator statistikalari
+        operators_with_stats = []
+        for operator in operators:
+            op_stats = {
+                'operator': operator,
+                'today_calls': 0,
+                'success_rate': 0,
+                'status': 'active' if operator.user.is_active else 'inactive'
+            }
+
+            # Operator'ning bugungi qo'ng'iroqlari
+            if operator.operator_id and today_data.get('success'):
+                op_calls = [
+                    call for call in today_data.get('calls', [])
+                    if call.get('src') == operator.operator_id
+                ]
+                op_stats['today_calls'] = len(op_calls)
+
+                if op_calls:
+                    answered = len([c for c in op_calls if c.get('disposition') == 'ANSWERED'])
+                    op_stats['success_rate'] = round((answered / len(op_calls)) * 100, 1)
+
+            operators_with_stats.append(op_stats)
+
+        # Recent calls (oxirgi 20 ta)
+        recent_calls = []
+        if operator_ids and today_data.get('success'):
+            all_calls = [
+                call for call in today_data.get('calls', [])
+                if call.get('src') in operator_ids or call.get('dst') in operator_ids
+            ]
+            recent_calls = sorted(all_calls, key=lambda x: x.get('calldate', ''), reverse=True)[:20]
+
+        context.update({
+            'operators': operators_with_stats,
+            'operators_count': len(operators),
+            'active_operators': len([op for op in operators if op.user.is_active]),
+            'stats': all_stats.get('today', {}),
+            'chart_data': chart_data,
+            'recent_calls': recent_calls,
+            'today': today,
+        })
+
+    except Exception as e:
+        logger.error(f"Client detail sahifasida xatolik: {str(e)}")
+        context['error'] = str(e)
+
+    return render(request, 'dashboards/monitoring/client_detail.html', context)
+
+
+@login_required
+def client_chart_data_api(request, client_id):
+    """Client uchun chart ma'lumotlarini JSON formatda qaytarish"""
+    client = get_object_or_404(ClientProfile, id=client_id)
+
+    try:
+        period = request.GET.get('period', 'week')  # week, month, day
+
+        operator_ids = [op.operator_id for op in client.operators.all() if op.operator_id]
+
+        if not operator_ids:
+            return JsonResponse({'success': False, 'error': 'Operatorlar topilmadi'})
+
+        chart_data = []
+
+        if period == 'week':
+            # 7 kunlik ma'lumot
+            for i in range(7):
+                date = timezone.now().date() - timedelta(days=i)
+                date_str = date.strftime('%Y-%m-%d')
+
+                try:
+                    response = pbx_service.get_cdr_data(start_date=date_str, end_date=date_str)
+                    data = pbx_service.process_cdr_data(response)
+
+                    if data['success']:
+                        calls = [
+                            call for call in data['calls']
+                            if call.get('src') in operator_ids or call.get('dst') in operator_ids
+                        ]
+                        stats = pbx_service._calculate_call_statistics(calls)
+
+                        chart_data.append({
+                            'date': date.strftime('%d.%m'),
+                            'total': stats.get('total_calls', 0),
+                            'answered': stats.get('answered_calls', 0),
+                            'success_rate': stats.get('answer_rate', 0),
+                        })
+                except:
+                    chart_data.append({
+                        'date': date.strftime('%d.%m'),
+                        'total': 0,
+                        'answered': 0,
+                        'success_rate': 0,
+                    })
+
+            chart_data.reverse()
+
+        return JsonResponse({
+            'success': True,
+            'data': chart_data
+        })
+
+    except Exception as e:
+        logger.error(f"Chart data API xatolik: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
 

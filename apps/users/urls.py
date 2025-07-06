@@ -17,6 +17,11 @@ from .views import (
     bulk_operator_actions, operator_detail
 )
 
+# Monitoring
+from .views import (
+    client_detail_view, client_chart_data_api
+)
+
 urlpatterns = [
     # Auth URLs
     path('login/', login_view, name='login'),
@@ -50,4 +55,8 @@ urlpatterns = [
 
     # Bulk operator actions
     path('operators/bulk-actions/', bulk_operator_actions, name='bulk_operator_actions'),
+
+    # Monitoring
+    path('dashboard/client/<int:client_id>/', client_detail_view, name='client_detail'),
+    path('dashboard/client/<int:client_id>/chart-data/', client_chart_data_api, name='client_chart_data'),
 ]
