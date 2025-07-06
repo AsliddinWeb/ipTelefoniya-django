@@ -14,7 +14,7 @@ from .views import (
 from .views import (
     operators_list, active_operators_list, add_operator,
     edit_operator, toggle_operator_status, delete_operator,
-    bulk_operator_actions, operator_detail
+    bulk_operator_actions, operator_detail, home_view
 )
 
 # Monitoring
@@ -23,6 +23,9 @@ from .views import (
 )
 
 urlpatterns = [
+    # Home
+    path('', home_view, name='home'),
+
     # Auth URLs
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),

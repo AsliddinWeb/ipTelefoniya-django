@@ -15,6 +15,8 @@ import csv
 
 logger = logging.getLogger(__name__)
 
+def home_view(request):
+    return redirect('dashboard')
 
 @login_required
 def dashboard(request):
