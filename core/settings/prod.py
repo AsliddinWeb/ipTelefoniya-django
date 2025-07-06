@@ -93,9 +93,18 @@ LOGGING = {
 }
 
 # Performance settings
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+# DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+# FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+# DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
 
+# Development muhitida HTTPS redirect ni o'chirish
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
+# Agar base.py da yoki boshqa joyda HTTPS sozlamalari bo'lsa, ularni override qilish:
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
 
 print("🚀 Production mode is ON")
