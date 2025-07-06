@@ -2,8 +2,12 @@
 from .base import *
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Environment
-ENVIRONMENT = os.getenv('DJANGO_ENVIRONMENT', 'dev')
+ENVIRONMENT = os.environ.get('DJANGO_ENVIRONMENT', 'dev')
 print(ENVIRONMENT)
 
 if ENVIRONMENT == 'production':
