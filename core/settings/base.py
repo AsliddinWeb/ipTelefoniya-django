@@ -1,5 +1,10 @@
 # core/settings/base.py
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -107,9 +112,9 @@ ADMIN_SITE_TITLE = "Admin"
 ADMIN_INDEX_TITLE = "Admin"
 
 # Session settings
-SESSION_COOKIE_AGE = 3600 * 24 * 7  # 1 hafta
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_SAVE_EVERY_REQUEST = True
+# SESSION_COOKIE_AGE = 3600 * 24 * 7  # 1 hafta
+# SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+# SESSION_SAVE_EVERY_REQUEST = True
 
 # Logging configuration
 LOGGING = {
@@ -158,5 +163,5 @@ LOGGING = {
 
 # PBX API Settings
 PBX_API_BASE_URL = 'https://185.203.236.211:27218/pbxapi'
-PBX_API_USERNAME = 'apiuser'
-PBX_API_PASSWORD = 'SqhAKnQUt9CV3yLp0Hgs10x'
+PBX_API_USERNAME = os.environ.get('PBX_API_USERNAME')
+PBX_API_PASSWORD = os.environ.get('PBX_API_PASSWORD')
