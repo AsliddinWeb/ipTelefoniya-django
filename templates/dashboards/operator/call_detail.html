@@ -1,0 +1,674 @@
+{% extends 'dashboards/operator/base_operator.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Qo'ng'iroq tafsilotlari</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'calls_list' %}">Qo'ng'iroqlar</a></li>
+                        <li class="breadcrumb-item active">Tafsilotlar</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call Info Cards -->
+    <div class="row">
+        <!-- Call Status Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Qo'ng'iroq holati</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title
+                                    {% if call.disposition == 'ANSWERED' %}bg-success-subtle text-success
+                                    {% elif call.disposition == 'NO ANSWER' %}bg-warning-subtle text-warning
+                                    {% elif call.disposition == 'FAILED' %}bg-danger-subtle text-danger
+                                    {% else %}bg-info-subtle text-info{% endif %} rounded fs-3">
+                                    <i class="{% if call.disposition == 'ANSWERED' %}ri-check-line
+                                           {% elif call.disposition == 'NO ANSWER' %}ri-time-line
+                                           {% elif call.disposition == 'FAILED' %}ri-close-line
+                                           {% else %}ri-information-line{% endif %}"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-2">{{ call.disposition_uz|default:call.disposition }}</h4>
+                        <span class="badge
+                            {% if call.disposition == 'ANSWERED' %}bg-success-subtle text-success
+                            {% elif call.disposition == 'NO ANSWER' %}bg-warning-subtle text-warning
+                            {% elif call.disposition == 'FAILED' %}bg-danger-subtle text-danger
+                            {% else %}bg-info-subtle text-info{% endif %}">
+                            {{ call.disposition }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Duration Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Umumiy davomiyligi</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                                    <i class="ri-time-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-2">{{ call.duration_formatted|default:"0s" }}</h4>
+                        <span class="text-muted">{{ call.duration|default:0 }} soniya</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billable Duration Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Hisoblangan vaqt</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-success-subtle text-success rounded fs-3">
+                                    <i class="ri-money-dollar-circle-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-2">{{ call.billsec_formatted|default:"0s" }}</h4>
+                        <span class="text-muted">{{ call.billsec|default:0 }} soniya</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Qo'ng'iroq yo'nalishi</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title
+                                    {% if call.call_direction == 'incoming' %}bg-info-subtle text-info
+                                    {% elif call.call_direction == 'outgoing' %}bg-warning-subtle text-warning
+                                    {% else %}bg-primary-subtle text-primary{% endif %} rounded fs-3">
+                                    <i class="{% if call.call_direction == 'incoming' %}ri-arrow-down-line
+                                           {% elif call.call_direction == 'outgoing' %}ri-arrow-up-line
+                                           {% else %}ri-arrow-left-right-line{% endif %}"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-2">{{ call.call_direction_uz|default:call.call_direction|title }}</h4>
+                        <span class="badge bg-light text-dark">{{ call.call_direction }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Details -->
+    <div class="row">
+        <div class="col-xl-8">
+            <!-- Call Information -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h5 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-information-line me-2"></i>Qo'ng'iroq ma'lumotlari
+                        </h5>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="btn btn-soft-primary btn-sm" onclick="window.print()">
+                                <i class="ri-printer-line me-1"></i>Chop etish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="fw-medium text-muted" style="width: 200px;">Qo'ng'iroq ID:</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium text-muted">Sana va vaqt:</td>
+                                    <td>
+                                        <strong>{{ call.calldate|default:"Noma'lum" }}</strong>
+                                        {% if call.time %}
+                                            <span class="text-muted ms-2">{{ call.time }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium text-muted">Qo'ng'iroq qiluvchi:</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-xs me-2">
+                                                <div class="avatar-title rounded-circle bg-light text-primary">
+                                                    <i class="ri-user-line"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {% if call.caller_name %}
+                                                    <strong>{{ call.caller_name }}</strong><br>
+                                                    <small class="text-muted">{{ call.src|default:"—" }}</small>
+                                                {% else %}
+                                                    <strong>{{ call.src|default:"Noma'lum" }}</strong>
+                                                {% endif %}
+                                                {% if call.caller_id %}
+                                                    <br><small class="text-muted">{{ call.caller_id }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium text-muted">Qabul qiluvchi:</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-xs me-2">
+                                                <div class="avatar-title rounded-circle bg-light text-success">
+                                                    <i class="ri-phone-line"></i>
+                                                </div>
+                                            </div>
+                                            <strong>{{ call.dst|default:"Noma'lum" }}</strong>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium text-muted">Kontekst:</td>
+                                    <td>{{ call.context|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium text-muted">Asosiy kanal:</td>
+                                    <td>
+                                        <code class="text-primary">{{ call.channel|default:"—" }}</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium text-muted">Maqsad kanal:</td>
+                                    <td>
+                                        <code class="text-success">{{ call.dst_channel|default:"—" }}</code>
+                                    </td>
+                                </tr>
+                                {% if call.recording_file %}
+                                <tr>
+                                    <td class="fw-medium text-muted">Yozuv fayli:</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="ri-file-music-line text-primary me-2"></i>
+                                            <span>{{ call.recording_file }}</span>
+                                            <button class="btn btn-soft-primary btn-sm ms-2" onclick="playRecording('{{ call.recording_file }}')">
+                                                <i class="ri-play-line me-1"></i>Eshitish
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-time-line me-2"></i>Qo'ng'iroq timeline
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Qo'ng'iroq boshlandi</h6>
+                                <p class="timeline-description text-muted">
+                                    {{ call.src }} dan {{ call.dst }} ga qo'ng'iroq
+                                </p>
+                                <small class="timeline-time text-muted">{{ call.calldate }}</small>
+                            </div>
+                        </div>
+
+                        {% if call.disposition == 'ANSWERED' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Qo'ng'iroq qabul qilindi</h6>
+                                <p class="timeline-description text-muted">
+                                    Muvaffaqiyatli ulandi
+                                </p>
+                                <small class="timeline-time text-muted">Bir necha soniya ichida</small>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Suhbat tugadi</h6>
+                                <p class="timeline-description text-muted">
+                                    Jami davomiyligi: {{ call.duration_formatted|default:call.duration }}s
+                                </p>
+                                <small class="timeline-time text-muted">{{ call.billsec }} soniya hisoblandi</small>
+                            </div>
+                        </div>
+                        {% elif call.disposition == 'NO ANSWER' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Javob berilmadi</h6>
+                                <p class="timeline-description text-muted">
+                                    Qo'ng'iroq {{ call.duration }} soniya davom etdi, lekin javob berilmadi
+                                </p>
+                                <small class="timeline-time text-muted">Avtomatik tugatildi</small>
+                            </div>
+                        </div>
+                        {% elif call.disposition == 'FAILED' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-danger"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Qo'ng'iroq muvaffaqiyatsiz</h6>
+                                <p class="timeline-description text-muted">
+                                    Ulanish xatoligi yuz berdi
+                                </p>
+                                <small class="timeline-time text-muted">{{ call.duration }} soniya ichida</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-xl-4">
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-tools-line me-2"></i>Tez amallar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if call.recording_file %}
+                        <button class="btn btn-soft-primary" onclick="playRecording('{{ call.recording_file }}')">
+                            <i class="ri-play-line me-2"></i>Yozuvni eshitish
+                        </button>
+                        <button class="btn btn-soft-success" onclick="downloadRecording('{{ call.recording_file }}')">
+                            <i class="ri-download-line me-2"></i>Yozuvni yuklab olish
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-soft-info" onclick="window.print()">
+                            <i class="ri-printer-line me-2"></i>Chop etish
+                        </button>
+                        <button class="btn btn-soft-warning" onclick="exportCallData()">
+                            <i class="ri-file-export-line me-2"></i>Ma'lumotni eksport qilish
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Calls -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-links-line me-2"></i>Bog'liq qo'ng'iroqlar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center text-muted py-3">
+                        <i class="ri-search-line fs-2 mb-2 d-block"></i>
+                        <p class="mb-0">Bir xil raqamlar orasidagi qo'ng'iroqlar qidirilmoqda...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call Statistics -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-bar-chart-line me-2"></i>Qo'shimcha ma'lumotlar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="avatar-sm mx-auto mb-2">
+                                    <div class="avatar-title bg-light text-primary rounded">
+                                        <i class="ri-timer-line"></i>
+                                    </div>
+                                </div>
+                                <h6 class="mb-1">{{ call.duration|default:0 }}s</h6>
+                                <p class="text-muted mb-0 fs-12">Umumiy vaqt</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="avatar-sm mx-auto mb-2">
+                                    <div class="avatar-title bg-light text-success rounded">
+                                        <i class="ri-money-dollar-line"></i>
+                                    </div>
+                                </div>
+                                <h6 class="mb-1">{{ call.billsec|default:0 }}s</h6>
+                                <p class="text-muted mb-0 fs-12">Hisoblangan</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row g-0">
+                        <div class="col-6">
+                            <div class="border-end border-end-dashed">
+                                <div class="text-center p-2">
+                                    <p class="text-muted mb-1 fs-13">Kanal turi</p>
+                                    <h6 class="mb-0">
+                                        {% if 'SIP' in call.channel %}SIP
+                                        {% elif 'DAHDI' in call.channel %}DAHDI
+                                        {% elif 'IAX' in call.channel %}IAX
+                                        {% else %}Noma'lum{% endif %}
+                                    </h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-2">
+                                <p class="text-muted mb-1 fs-13">Protokol</p>
+                                <h6 class="mb-0">
+                                    {% if call.call_direction == 'internal' %}Internal
+                                    {% else %}External{% endif %}
+                                </h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Data (for debugging) -->
+    {% if user.is_superuser and call.raw_data %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h5 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-code-line me-2"></i>Raw ma'lumotlar (Debug)
+                        </h5>
+                        <button class="btn btn-soft-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#rawDataCollapse">
+                            <i class="ri-arrow-down-s-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="collapse" id="rawDataCollapse">
+                    <div class="card-body">
+                        <pre class="bg-light p-3 rounded"><code>{{ call.raw_data|pprint }}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recording Modal -->
+    <div class="modal fade" id="recordingModal" tabindex="-1" aria-labelledby="recordingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="recordingModalLabel">
+                        <i class="ri-play-circle-line me-2"></i>Qo'ng'iroq yozuvi
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar-lg mx-auto mb-3">
+                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                <i class="ri-music-2-line fs-2"></i>
+                            </div>
+                        </div>
+                                                        <h6 class="mb-1">{{ call.caller_name|default:call.src|default:"Noma'lum" }} → {{ call.dst|default:"Noma'lum" }}</h6>
+                                                        <p class="text-muted mb-0">{{ call.calldate|default:"Noma'lum sana" }}</p>
+                    </div>
+
+                    <audio id="recordingPlayer" controls style="width: 100%;" class="mb-3">
+                        Your browser does not support the audio element.
+                    </audio>
+
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <div class="text-center">
+                                <p class="text-muted mb-1">Davomiyligi</p>
+                                <h6 class="mb-0">{{ call.duration_formatted }}</h6>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center">
+                                <p class="text-muted mb-1">Fayl nomi</p>
+                                <h6 class="mb-0" id="recordingFileName"></h6>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center">
+                                <p class="text-muted mb-1">Holati</p>
+                                <h6 class="mb-0">{{ call.disposition_uz|default:call.disposition|default:"Noma'lum" }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">
+                        <i class="ri-close-line me-1"></i>Yopish
+                    </button>
+                    <button type="button" class="btn btn-primary" id="downloadRecording">
+                        <i class="ri-download-line me-1"></i>Yuklab olish
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock main_content %}
+
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 3rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1.5rem;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -3rem;
+    top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #e9ecef;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+}
+
+.timeline-title {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.timeline-description {
+    margin-bottom: 0.5rem;
+}
+
+.timeline-time {
+    font-size: 0.75rem;
+}
+
+.card-animate {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card-animate:hover {
+    transform: translateY(-2px);
+}
+
+/* Print styles */
+@media print {
+    .btn, .card-header button, .modal {
+        display: none !important;
+    }
+
+    .card {
+        border: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+    }
+
+    .page-title-right {
+        display: none !important;
+    }
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+code {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+.avatar-lg {
+    width: 4rem;
+    height: 4rem;
+}
+
+.fs-2 {
+    font-size: 1.5rem;
+}
+
+#recordingPlayer {
+    border-radius: 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- JavaScript -->
+<script>
+// Recording player function
+function playRecording(recordingFile) {
+    const modal = new bootstrap.Modal(document.getElementById('recordingModal'));
+    const player = document.getElementById('recordingPlayer');
+    const fileName = document.getElementById('recordingFileName');
+    const downloadBtn = document.getElementById('downloadRecording');
+
+    // Set audio source (adjust URL as needed)
+    player.src = `/media/recordings/${recordingFile}`;
+    fileName.textContent = recordingFile.split('/').pop();
+
+    // Download functionality
+    downloadBtn.onclick = function() {
+        downloadRecording(recordingFile);
+    };
+
+    modal.show();
+}
+
+// Download recording
+function downloadRecording(recordingFile) {
+    const link = document.createElement('a');
+    link.href = `/media/recordings/${recordingFile}`;
+    link.download = recordingFile.split('/').pop();
+    link.click();
+}
+
+// Export call data
+function exportCallData() {
+    const callData = {
+        id: '{{ call.id }}',
+        date: '{{ call.calldate }}',
+        src: '{{ call.src }}',
+        dst: '{{ call.dst }}',
+        duration: '{{ call.duration }}',
+        disposition: '{{ call.disposition }}'
+    };
+
+    const dataStr = JSON.stringify(callData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `call_${callData.id}_details.json`;
+    link.click();
+}
+
+// Print styles
+window.addEventListener('beforeprint', function() {
+    document.body.classList.add('print-mode');
+});
+
+window.addEventListener('afterprint', function() {
+    document.body.classList.remove('print-mode');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends 'dashboards/client/base_client.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Yangi Operator Qo'shish</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'operators_list' %}">Operatorlar</a></li>
+                        <li class="breadcrumb-item active">Yangi operator</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-sm">
+                                <div class="avatar-title rounded-circle bg-primary">
+                                    <i class="ri-user-add-line text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4 class="card-title mb-1">Yangi Operator Ma'lumotlari</h4>
+                            <p class="text-muted mb-0">Operator uchun kerakli ma'lumotlarni to'ldiring</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <a href="{% url 'operators_list' %}" class="btn btn-soft-secondary btn-sm">
+                                <i class="ri-arrow-left-line me-1"></i>Orqaga
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Display Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <i class="ri-{% if message.tags == 'success' %}check-line{% elif message.tags == 'error' %}error-warning-line{% else %}information-line{% endif %} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Simple Form -->
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Account Information -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="card-title mb-3">
+                                    <i class="ri-account-circle-line me-2 text-primary"></i>Akkaunt Ma'lumotlari
+                                </h5>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Foydalanuvchi nomi <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="username" name="username"
+                                           value="{{ form_data.username|default:'' }}"
+                                           placeholder="operator123" required>
+                                    <div class="form-text">Tizimga kirish uchun noyob nom</div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email manzil <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           value="{{ form_data.email|default:'' }}"
+                                           placeholder="operator@company.com" required>
+                                    <div class="form-text">Operator bilan aloqa uchun</div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Parol <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="password" name="password"
+                                               placeholder="Kamida 8 belgidan iborat" required minlength="8">
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            <i class="ri-eye-line"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Kamida 8 belgidan iborat xavfsiz parol</div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="full_name" class="form-label">To'liq ism familiya <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="full_name" name="full_name"
+                                           value="{{ form_data.full_name|default:'' }}"
+                                           placeholder="Ism Familiya" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Work Information -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="card-title mb-3">
+                                    <i class="ri-briefcase-line me-2 text-warning"></i>Ish Ma'lumotlari
+                                </h5>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="operator_id" class="form-label">Operator ID <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="operator_id" name="operator_id"
+                                           value="{{ form_data.operator_id|default:'' }}"
+                                           placeholder="101" required>
+                                    <div class="form-text">PBX tizimidagi noyob ID (masalan: 101, 102, 201)</div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Telefon raqami</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone"
+                                           value="{{ form_data.phone|default:'' }}"
+                                           placeholder="+998 90 123 45 67">
+                                    <div class="form-text">Aloqa uchun telefon raqami</div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">Lavozim</label>
+                                    <select class="form-select" id="position" name="position">
+                                        <option value="Operator" {% if form_data.position == 'Operator' or not form_data.position %}selected{% endif %}>Operator</option>
+                                        <option value="Senior Operator" {% if form_data.position == 'Senior Operator' %}selected{% endif %}>Senior Operator</option>
+                                        <option value="Call Center Agent" {% if form_data.position == 'Call Center Agent' %}selected{% endif %}>Call Center Agent</option>
+                                        <option value="Customer Service" {% if form_data.position == 'Customer Service' %}selected{% endif %}>Customer Service</option>
+                                        <option value="Technical Support" {% if form_data.position == 'Technical Support' %}selected{% endif %}>Technical Support</option>
+                                        <option value="Sales Representative" {% if form_data.position == 'Sales Representative' %}selected{% endif %}>Sales Representative</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="department" class="form-label">Bo'lim</label>
+                                    <input type="text" class="form-control" id="department" name="department"
+                                           value="{{ form_data.department|default:'' }}"
+                                           placeholder="Call Center">
+                                    <div class="form-text">Operator ishlayotgan bo'lim</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Settings -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="card-title mb-3">
+                                    <i class="ri-settings-3-line me-2 text-success"></i>Sozlamalar
+                                </h5>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                           {% if form_data.is_active == 'on' or not form_data %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">
+                                        <strong>Operatorni darhol faollashtirish</strong>
+                                        <div class="text-muted">Agar belgilansa, operator darhol tizimga kirishga ruxsat oladi</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a href="{% url 'operators_list' %}" class="btn btn-light">
+                                        <i class="ri-arrow-left-line me-1"></i>Bekor qilish
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ri-save-line me-1"></i>Operatorni qo'shish
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Information Card -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-sm">
+                                <div class="avatar-title rounded-circle bg-info">
+                                    <i class="ri-information-line text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Muhim ma'lumotlar:</h6>
+                            <ul class="text-muted mb-0 ps-3">
+                                <li>Operator ID noyob bo'lishi kerak va PBX tizimida mavjud bo'lmasligi kerak</li>
+                                <li>Xavfsiz parol tanlanishi muhim - kamida 8 belgi, harflar va raqamlar</li>
+                                <li>Email manzil operator bilan aloqa o'rnatish uchun ishlatiladi</li>
+                                <li>Faol operatorlar darhol tizimga kirishga ruxsat oladi</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock main_content %}
+
+{% block extra_css %}
+<style>
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.was-validated .form-control:valid {
+    border-color: #198754;
+}
+
+.was-validated .form-control:invalid {
+    border-color: #dc3545;
+}
+
+.card-title {
+    color: #495057;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password toggle
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const icon = this.querySelector('i');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            icon.className = 'ri-eye-off-line';
+        } else {
+            passwordField.type = 'password';
+            icon.className = 'ri-eye-line';
+        }
+    });
+
+    // Operator ID validation - only numbers
+    const operatorId = document.getElementById('operator_id');
+    operatorId.addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '');
+        if (this.value.length > 4) {
+            this.value = this.value.substring(0, 4);
+        }
+    });
+
+    // Phone number formatting
+    const phoneInput = document.getElementById('phone');
+    phoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.startsWith('998')) {
+            value = value.substring(3);
+        }
+        if (value.length > 0) {
+            if (value.length <= 2) {
+                value = `+998 ${value}`;
+            } else if (value.length <= 5) {
+                value = `+998 ${value.substring(0, 2)} ${value.substring(2)}`;
+            } else if (value.length <= 7) {
+                value = `+998 ${value.substring(0, 2)} ${value.substring(2, 5)} ${value.substring(5)}`;
+            } else {
+                value = `+998 ${value.substring(0, 2)} ${value.substring(2, 5)} ${value.substring(5, 7)} ${value.substring(7, 9)}`;
+            }
+        }
+        e.target.value = value;
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,639 @@
+{% extends 'dashboards/client/base_client.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Faol Operatorlar</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'operators_list' %}">Operatorlar</a></li>
+                        <li class="breadcrumb-item active">Faol operatorlar</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Status Banner -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success border-0 rounded" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="ri-checkbox-circle-fill fs-2"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="alert-heading mb-1">Faol Operatorlar</h5>
+                        <p class="mb-0">
+                            Bu sahifada faqat faol holda bo'lgan operatorlar ko'rsatiladi. 
+                            Ular tizimga kirishga va qo'ng'iroqlar bilan ishlashga ruxsat berilgan.
+                        </p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <a href="{% url 'operators_list' %}" class="btn btn-soft-primary btn-sm">
+                            <i class="ri-list-check me-1"></i>Barcha operatorlar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Faol operatorlar</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-success-subtle text-success rounded fs-3">
+                                    <i class="ri-user-star-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                <span class="counter-value" data-target="{{ stats.active }}">{{ stats.active }}</span>
+                            </h4>
+                            <p class="text-muted mb-0">{{ stats.total }} dan {{ stats.active }} ta faol</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Online operatorlar</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-info-subtle text-info rounded fs-3">
+                                    <i class="ri-wifi-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                <span class="counter-value" data-target="{{ online_operators|default:0 }}">{{ online_operators|default:0 }}</span>
+                            </h4>
+                            <p class="text-muted mb-0">Oxirgi 1 soatda kirgan</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Bugungi qo'ng'iroqlar</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                                    <i class="ri-phone-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                <span class="counter-value" data-target="{{ total_calls_today|default:0 }}">{{ total_calls_today|default:0 }}</span>
+                            </h4>
+                            <p class="text-muted mb-0">Faol operatorlar orqali</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="avatar-md mx-auto mb-3">
+                        <div class="avatar-title bg-warning rounded-circle">
+                            <i class="ri-user-unfollow-line text-white fs-20"></i>
+                        </div>
+                    </div>
+                    <h6 class="mb-2">Nofaol operatorlar</h6>
+                    <p class="text-muted mb-2">{{ stats.inactive }} ta operator nofaol</p>
+                    <a href="{% url 'operators_list' %}?status=inactive" class="btn btn-soft-warning btn-sm">
+                        <i class="ri-eye-line me-1"></i>Ko'rish
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Operators List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h4 class="card-title mb-0">
+                                <i class="ri-user-star-line text-success me-2"></i>Faol operatorlar ro'yxati
+                            </h4>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-soft-warning btn-sm" onclick="bulkDeactivate()" id="bulkDeactivateBtn" style="display: none;">
+                                    <i class="ri-pause-circle-line me-1"></i>Tanlanganlarni faolsizlashtirish
+                                </button>
+                                <a href="{% url 'add_operator' %}" class="btn btn-primary btn-sm">
+                                    <i class="ri-add-line me-1"></i>Yangi operator
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Search -->
+                    <form method="GET" class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="search-box">
+                                <input type="text" class="form-control" placeholder="Faol operator qidirish..." 
+                                       name="search" value="{{ search_query }}" id="searchOperators">
+                                <i class="ri-search-line search-icon"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="department">
+                                <option value="">Barcha bo'limlar</option>
+                                {% for department in departments %}
+                                    <option value="{{ department }}" {% if department == department_filter %}selected{% endif %}>{{ department }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="ri-search-line me-1"></i>Qidirish
+                            </button>
+                        </div>
+                        <!-- Hidden status field -->
+                        <input type="hidden" name="status" value="active">
+                    </form>
+
+                    <!-- Operators Grid -->
+                    <div class="row">
+                        {% for operator in operators %}
+                        <div class="col-xl-4 col-lg-6">
+                            <div class="card border h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-shrink-0 me-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input operator-checkbox" type="checkbox" 
+                                                       name="operator_check" value="{{ operator.id }}">
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0 me-3">
+                                            <div class="avatar-md">
+                                                <div class="avatar-title bg-success rounded-circle">
+                                                    <i class="ri-user-line text-white fs-20"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <a href="{% url 'operator_detail' operator.id %}" class="text-decoration-none">
+                                                    {{ operator.full_name|default:operator.user.username }}
+                                                </a>
+                                            </h6>
+                                            <p class="text-muted mb-1">
+                                                <code class="text-primary">{{ operator.operator_id }}</code>
+                                            </p>
+                                            <p class="text-muted mb-2">{{ operator.department|default:"Bo'lim belgilanmagan" }}</p>
+                                            
+                                            <!-- Status indicators -->
+                                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                                <span class="badge bg-success-subtle text-success">
+                                                    <i class="ri-checkbox-circle-line me-1"></i>Faol
+                                                </span>
+                                                {% if operator.user.last_login %}
+                                                    {% now "U" as current_timestamp %}
+                                                    {% if operator.user.last_login.timestamp|add:"3600" > current_timestamp %}
+                                                        <span class="badge bg-info-subtle text-info">
+                                                            <i class="ri-wifi-line me-1"></i>Online
+                                                        </span>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Stats -->
+                                            <div class="row g-2 text-center mb-3">
+                                                <div class="col-6">
+                                                    <div class="p-2 border rounded">
+                                                        <h6 class="mb-1 text-primary">{{ operator.today_calls_count|default:0 }}</h6>
+                                                        <p class="text-muted mb-0 fs-12">Bugungi qo'ng'iroqlar</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="p-2 border rounded">
+                                                        <h6 class="mb-1 text-success">{{ operator.success_rate|default:0 }}%</h6>
+                                                        <p class="text-muted mb-0 fs-12">Muvaffaqiyat</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Contact info -->
+                                            <div class="mb-3">
+                                                <small class="text-muted d-block">
+                                                    <i class="ri-mail-line me-1"></i>{{ operator.user.email }}
+                                                </small>
+                                                {% if operator.phone %}
+                                                <small class="text-muted d-block">
+                                                    <i class="ri-phone-line me-1"></i>{{ operator.phone }}
+                                                </small>
+                                                {% endif %}
+                                                <small class="text-muted d-block">
+                                                    <i class="ri-time-line me-1"></i>Oxirgi: {{ operator.user.last_login|date:"d.m.Y H:i"|default:"Hech qachon" }}
+                                                </small>
+                                            </div>
+
+                                            <!-- Actions -->
+                                            <div class="d-flex gap-1">
+                                                <a href="{% url 'operator_detail' operator.id %}" class="btn btn-soft-primary btn-sm flex-fill">
+                                                    <i class="ri-eye-line me-1"></i>Ko'rish
+                                                </a>
+                                                <a href="{% url 'calls_list' %}?operator_id={{ operator.operator_id }}" class="btn btn-soft-info btn-sm flex-fill" target="_blank">
+                                                    <i class="ri-phone-line me-1"></i>Qo'ng'iroqlar
+                                                </a>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" 
+                                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="ri-more-line"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <a class="dropdown-item" href="{% url 'edit_operator' operator.id %}">
+                                                                <i class="ri-edit-line me-2"></i>Tahrirlash
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <a class="dropdown-item text-warning" href="#" 
+                                                               onclick="toggleOperatorStatus({{ operator.id }}, true)">
+                                                                <i class="ri-pause-circle-line me-2"></i>Faolsizlashtirish
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item text-danger" href="#" 
+                                                               onclick="deleteOperator({{ operator.id }}, '{{ operator.full_name|default:operator.user.username }}')">
+                                                                <i class="ri-delete-bin-line me-2"></i>O'chirish
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="ri-user-unfollow-line fs-1 d-block mb-3"></i>
+                                    {% if search_query or department_filter %}
+                                        <h5>Filter shartlariga mos faol operator topilmadi</h5>
+                                        <p class="mb-3">Qidiruv so'zini o'zgartiring yoki filterni tozalang</p>
+                                        <a href="{% url 'active_operators_list' %}" class="btn btn-primary btn-sm">Filterni tozalash</a>
+                                    {% else %}
+                                        <h5>Hozircha faol operatorlar yo'q</h5>
+                                        <p class="mb-3">Operatorlarni faollashtiring yoki yangi operator qo'shing</p>
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <a href="{% url 'operators_list' %}?status=inactive" class="btn btn-soft-warning btn-sm">
+                                                <i class="ri-user-unfollow-line me-1"></i>Nofaol operatorlar
+                                            </a>
+                                            <a href="{% url 'add_operator' %}" class="btn btn-primary btn-sm">
+                                                <i class="ri-user-add-line me-1"></i>Yangi operator qo'shish
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if operators.has_other_pages %}
+                    <div class="row align-items-center mt-4 pt-2 justify-content-between">
+                        <div class="col-sm">
+                            <div class="text-muted">
+                                Ko'rsatilmoqda {{ operators.start_index }}-{{ operators.end_index }} dan {{ operators.paginator.count }} faol operator
+                            </div>
+                        </div>
+                        <div class="col-sm-auto mt-3 mt-sm-0">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination pagination-sm mb-0">
+                                    {% if operators.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if department_filter %}&department={{ department_filter }}{% endif %}&status=active">
+                                                <i class="ri-arrow-left-s-line"></i><i class="ri-arrow-left-s-line"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ operators.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if department_filter %}&department={{ department_filter }}{% endif %}&status=active">
+                                                <i class="ri-arrow-left-s-line"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in operators.paginator.page_range %}
+                                        {% if num == operators.number %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > operators.number|add:'-3' and num < operators.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if department_filter %}&department={{ department_filter }}{% endif %}&status=active">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if operators.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ operators.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if department_filter %}&department={{ department_filter }}{% endif %}&status=active">
+                                                <i class="ri-arrow-right-s-line"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ operators.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if department_filter %}&department={{ department_filter }}{% endif %}&status=active">
+                                                <i class="ri-arrow-right-s-line"></i><i class="ri-arrow-right-s-line"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Bulk Actions Footer -->
+                    <div class="mt-3 pt-3 border-top" id="bulkActionsFooter" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted">
+                                <span id="selectedCount">0</span> ta operator tanlandi
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-soft-warning btn-sm" onclick="bulkDeactivate()">
+                                    <i class="ri-pause-circle-line me-1"></i>Faolsizlashtirish
+                                </button>
+                                <button type="button" class="btn btn-soft-danger btn-sm" onclick="bulkDelete()">
+                                    <i class="ri-delete-bin-line me-1"></i>O'chirish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock main_content %}
+
+{% block extra_css %}
+<style>
+.card-animate {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-animate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box .search-icon {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    color: #adb5bd;
+}
+
+.search-box .form-control {
+    padding-right: 40px;
+}
+
+.counter-value {
+    transition: all 0.3s ease;
+}
+
+.border-success {
+    border-color: #198754 !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Counter animation
+document.addEventListener('DOMContentLoaded', function() {
+    const counters = document.querySelectorAll('.counter-value');
+    
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const increment = target / 50;
+        let current = 0;
+        
+        const updateCounter = () => {
+            if (current < target) {
+                current += increment;
+                counter.textContent = Math.floor(current);
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target;
+            }
+        };
+        
+        updateCounter();
+    });
+});
+
+// Checkbox management
+document.querySelectorAll('.operator-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const checkedBoxes = document.querySelectorAll('.operator-checkbox:checked');
+        const bulkActionsFooter = document.getElementById('bulkActionsFooter');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        if (checkedBoxes.length > 0) {
+            bulkActionsFooter.style.display = 'block';
+            selectedCount.textContent = checkedBoxes.length;
+        } else {
+            bulkActionsFooter.style.display = 'none';
+        }
+    });
+});
+
+// Toggle operator status
+function toggleOperatorStatus(operatorId, currentStatus) {
+    const action = currentStatus ? 'deactivate' : 'activate';
+    const actionText = currentStatus ? 'faolsizlashtirish' : 'faollashtirish';
+    
+    if (confirm(`Operatorni ${actionText}ni xohlaysizmi?`)) {
+        fetch(`/operators/${operatorId}/toggle-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({action: action})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Xatolik: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Xatolik yuz berdi');
+        });
+    }
+}
+
+// Delete operator
+function deleteOperator(operatorId, operatorName) {
+    if (confirm(`"${operatorName}" operatorini o'chirish tasdiqlaysizmi? Bu amal qaytarilmaydi.`)) {
+        fetch(`/operators/${operatorId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Xatolik: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Xatolik yuz berdi');
+        });
+    }
+}
+
+// Bulk deactivate
+function bulkDeactivate() {
+    const checkedBoxes = document.querySelectorAll('.operator-checkbox:checked');
+    const operatorIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (operatorIds.length === 0) {
+        alert('Hech qanday operator tanlanmagan');
+        return;
+    }
+    
+    if (confirm(`${operatorIds.length} ta operatorni faolsizlashtirish tasdiqlaysizmi?`)) {
+        fetch('/operators/bulk-actions/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'deactivate',
+                operator_ids: operatorIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Xatolik: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Xatolik yuz berdi');
+        });
+    }
+}
+
+// Bulk delete
+function bulkDelete() {
+    const checkedBoxes = document.querySelectorAll('.operator-checkbox:checked');
+    const operatorIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (operatorIds.length === 0) {
+        alert('Hech qanday operator tanlanmagan');
+        return;
+    }
+    
+    if (confirm(`${operatorIds.length} ta operatorni o'chirish tasdiqlaysizmi? Bu amal qaytarilmaydi.`)) {
+        fetch('/operators/bulk-actions/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'delete',
+                operator_ids: operatorIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Xatolik: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Xatolik yuz berdi');
+        });
+    }
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

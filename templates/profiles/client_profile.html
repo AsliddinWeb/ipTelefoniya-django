@@ -1,0 +1,576 @@
+{% extends 'dashboards/client/base_client.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Client Profili</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Profil</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-4">
+            <!-- Profile Card -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center">
+                        <h5 class="fs-16 mb-1">{{ role_profile.company_name|default:user.username }}</h5>
+                        <p class="text-muted mb-0">
+                            <span class="badge bg-primary-subtle text-primary">
+                                <i class="ri-building-line me-1"></i>Client
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Email</label>
+                                <p class="form-control-static">{{ user.email|default:"Belgilanmagan" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subscription Status -->
+                    <div class="alert {% if role_profile.is_active_subscription %}alert-success{% else %}alert-warning{% endif %}" role="alert">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="ri-shield-check-line fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading mb-1">Obuna holati</h6>
+                                <p class="mb-0">
+                                    <strong>{{ role_profile.get_subscription_type_display|default:"Belgilanmagan" }}</strong> obuna
+                                    {% if role_profile.is_active_subscription %}
+                                        <span class="badge bg-success ms-2">Faol</span>
+                                    {% else %}
+                                        <span class="badge bg-warning ms-2">Nofaol</span>
+                                    {% endif %}
+                                    <br><small class="text-muted">
+                                        {% if role_profile.subscription_end %}
+                                            Tugash sanasi: {{ role_profile.subscription_end|date:"d.m.Y" }}
+                                        {% else %}
+                                            Muddatsiz obuna
+                                        {% endif %}
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Company Status Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-building-line me-2"></i>Kompaniya Holati
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <div class="avatar-title bg-success-subtle text-success rounded">
+                                    <i class="ri-check-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Akkaunt holati</h6>
+                            <small class="text-muted">{% if user.is_active %}Faol{% else %}Nofaol{% endif %}</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="badge {% if user.is_active %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
+                                {% if user.is_active %}Faol{% else %}Nofaol{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <div class="avatar-title bg-info-subtle text-info rounded">
+                                    <i class="ri-team-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Operatorlar soni</h6>
+                            <small class="text-muted">Jami operatorlar</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-xs">
+                                <div class="avatar-title bg-info rounded-circle">
+                                    <span class="text-white fs-10">{{ role_profile.operators.count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <div class="avatar-title bg-warning-subtle text-warning rounded">
+                                    <i class="ri-time-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Oxirgi faollik</h6>
+                            <small class="text-muted">{{ user.last_login|date:"d.m.Y H:i"|default:"Hech qachon" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-tools-line me-2"></i>Tez amallar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-soft-primary">
+                            <i class="ri-edit-line me-2"></i>Profilni tahrirlash
+                        </a>
+                        <a href="{% url 'calls_list' %}" class="btn btn-soft-info">
+                            <i class="ri-phone-line me-2"></i>Qo'ng'iroqlar tarixi
+                        </a>
+                        <a href="#" class="btn btn-soft-success">
+                            <i class="ri-user-add-line me-2"></i>Operator qo'shish
+                        </a>
+                        <button class="btn btn-soft-warning" onclick="changePassword()">
+                            <i class="ri-lock-line me-2"></i>Parolni o'zgartirish
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8">
+            <!-- Main Profile Information -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h5 class="card-title mb-0 flex-grow-1">
+                            <i class="ri-building-line me-2"></i>Kompaniya Ma'lumotlari
+                        </h5>
+                        <div class="flex-shrink-0">
+                            <a href="#" class="btn btn-soft-primary btn-sm">
+                                <i class="ri-edit-line me-1"></i>Tahrirlash
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Kompaniya nomi</label>
+                                <p class="form-control-static">{{ role_profile.company_name|default:"Belgilanmagan" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Aloqa shaxsi</label>
+                                <p class="form-control-static">{{ role_profile.contact_person|default:"Belgilanmagan" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">To'liq ism</label>
+                                <p class="form-control-static">{{ role_profile.full_name|default:"Belgilanmagan" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Foydalanuvchi nomi</label>
+                                <p class="form-control-static">{{ user.username }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Telefon raqami</label>
+                                <p class="form-control-static">{{ role_profile.phone|default:"Belgilanmagan" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Email</label>
+                                <p class="form-control-static">{{ user.email|default:"Belgilanmagan" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Manzil</label>
+                                <p class="form-control-static">{{ role_profile.address|default:"Belgilanmagan" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Details -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-calendar-line me-2"></i>Obuna Tafsilotlari
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Obuna turi</label>
+                                <p class="form-control-static">
+                                    <span class="badge bg-primary-subtle text-primary">
+                                        <i class="ri-vip-crown-line me-1"></i>{{ role_profile.get_subscription_type_display|default:"Belgilanmagan" }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Obuna holati</label>
+                                <p class="form-control-static">
+                                    {% if role_profile.is_active_subscription %}
+                                        <span class="badge bg-success-subtle text-success">
+                                            <i class="ri-check-line me-1"></i>Faol
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger">
+                                            <i class="ri-close-line me-1"></i>Nofaol
+                                        </span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Boshlanish sanasi</label>
+                                <p class="form-control-static">{{ role_profile.subscription_start|date:"d.m.Y"|default:"Belgilanmagan" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Tugash sanasi</label>
+                                <p class="form-control-static">{{ role_profile.subscription_end|date:"d.m.Y"|default:"Muddatsiz" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subscription Progress -->
+                    {% if role_profile.subscription_start and role_profile.subscription_end %}
+                    <div class="mt-3">
+                        {% now "Y-m-d" as today %}
+                        {% with days_total=role_profile.subscription_end|timeuntil:role_profile.subscription_start %}
+                        {% with days_left=role_profile.subscription_end|timeuntil:today %}
+                        <label class="form-label text-muted">Obuna muddati</label>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 65%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {% if role_profile.subscription_end|date:'Y-m-d' > today %}
+                                Tugashiga {{ role_profile.subscription_end|timeuntil }} qoldi
+                            {% else %}
+                                Obuna muddati tugagan
+                            {% endif %}
+                        </small>
+                        {% endwith %}
+                        {% endwith %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-bar-chart-line me-2"></i>Bugungi statistika
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="avatar-sm mx-auto mb-2">
+                                            <div class="avatar-title bg-primary-subtle text-primary rounded">
+                                                <i class="ri-phone-line"></i>
+                                            </div>
+                                        </div>
+                                        <h5 class="mb-1">156</h5>
+                                        <p class="text-muted mb-0 fs-12">Jami qo'ng'iroqlar</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="avatar-sm mx-auto mb-2">
+                                            <div class="avatar-title bg-success-subtle text-success rounded">
+                                                <i class="ri-check-line"></i>
+                                            </div>
+                                        </div>
+                                        <h5 class="mb-1">124</h5>
+                                        <p class="text-muted mb-0 fs-12">Javob berilgan</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="avatar-sm mx-auto mb-2">
+                                            <div class="avatar-title bg-warning-subtle text-warning rounded">
+                                                <i class="ri-time-line"></i>
+                                            </div>
+                                        </div>
+                                        <h5 class="mb-1">32</h5>
+                                        <p class="text-muted mb-0 fs-12">Javobsiz</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="avatar-sm mx-auto mb-2">
+                                            <div class="avatar-title bg-info-subtle text-info rounded">
+                                                <i class="ri-timer-line"></i>
+                                            </div>
+                                        </div>
+                                        <h5 class="mb-1">79%</h5>
+                                        <p class="text-muted mb-0 fs-12">Muvaffaqiyat</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-team-line me-2"></i>Operatorlar holati
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-borderless table-sm mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-muted">Jami operatorlar:</td>
+                                            <td class="fw-medium">{{ role_profile.operators.count }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Faol operatorlar:</td>
+                                            <td class="fw-medium">{{ active_operators_count|default:0 }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Nofaol operatorlar:</td>
+                                            <td class="fw-medium">{{ inactive_operators_count|default:0 }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Oxirgi qo'shilgan:</td>
+                                            <td class="fw-medium">
+                                                {% with last_operator=role_profile.operators.last %}
+                                                    {% if last_operator %}
+                                                        {{ last_operator.created_at|date:"d.m.Y" }}
+                                                    {% else %}
+                                                        Hech qachon
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Settings -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-shield-check-line me-2"></i>Xavfsizlik sozlamalari
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <h6 class="fw-semibold">Parol xavfsizligi</h6>
+                                <p class="text-muted mb-2">Oxirgi marta o'zgartirilgan:
+                                    <span class="fw-medium">15 kun oldin</span>
+                                </p>
+                                <button class="btn btn-soft-warning btn-sm" onclick="changePassword()">
+                                    <i class="ri-lock-line me-1"></i>Parolni o'zgartirish
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <h6 class="fw-semibold">Kirish sessiyalari</h6>
+                                <p class="text-muted mb-2">Faol sessiyalar:
+                                    <span class="fw-medium">1 ta</span>
+                                </p>
+                                <button class="btn btn-soft-danger btn-sm" onclick="logoutAllSessions()">
+                                    <i class="ri-logout-circle-line me-1"></i>Barcha sessiyalarni tugatish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">
+                    <i class="ri-lock-line me-2"></i>Parolni o'zgartirish
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="changePasswordForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Joriy parol</label>
+                        <input type="password" class="form-control" id="currentPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">Yangi parol</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Yangi parolni tasdiqlang</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ri-save-line me-1"></i>Saqlash
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock main_content %}
+
+{% block extra_css %}
+<style>
+.form-control-static {
+    padding: 0.5rem 0;
+    margin: 0;
+    font-weight: 500;
+    color: #495057;
+}
+
+code {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.card-animate {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card-animate:hover {
+    transform: translateY(-2px);
+}
+
+.avatar-sm {
+    width: 2rem;
+    height: 2rem;
+}
+
+.avatar-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.fs-10 {
+    font-size: 0.625rem;
+}
+
+.fs-12 {
+    font-size: 0.75rem;
+}
+
+.badge {
+    font-size: 0.6875rem;
+}
+
+.progress {
+    background-color: #e9ecef;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Change password function
+function changePassword() {
+    const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+    modal.show();
+}
+
+// Logout all sessions
+function logoutAllSessions() {
+    if (confirm('Barcha faol sessiyalarni tugatishni xohlaysizmi?')) {
+        // AJAX request to logout all sessions
+        alert('Barcha sessiyalar tugatilib, qayta kirishingiz kerak bo\'ladi.');
+    }
+}
+
+// Change password form submission
+document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (newPassword !== confirmPassword) {
+        alert('Yangi parollar mos kelmaydi!');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        alert('Yangi parol kamida 8 ta belgidan iborat bo\'lishi kerak!');
+        return;
+    }
+
+    // AJAX request to change password
+    alert('Parol muvaffaqiyatli o\'zgartirildi!');
+    bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+    this.reset();
+});
+</script>
+{% endblock %}

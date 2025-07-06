@@ -1,0 +1,655 @@
+{% extends 'dashboards/client/base_client.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Operator Tahrirlash</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'operators_list' %}">Operatorlar</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'operator_detail' operator.id %}">{{ operator.full_name|default:operator.user.username }}</a></li>
+                        <li class="breadcrumb-item active">Tahrirlash</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-sm">
+                                <div class="avatar-title rounded-circle bg-warning">
+                                    <i class="ri-edit-2-line text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4 class="card-title mb-1">{{ operator.full_name|default:operator.user.username }} - Ma'lumotlarni Tahrirlash</h4>
+                            <p class="text-muted mb-0">Operator ma'lumotlarini yangilang</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'operator_detail' operator.id %}" class="btn btn-soft-info btn-sm">
+                                    <i class="ri-eye-line me-1"></i>Ko'rish
+                                </a>
+                                <a href="{% url 'operators_list' %}" class="btn btn-soft-secondary btn-sm">
+                                    <i class="ri-arrow-left-line me-1"></i>Orqaga
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Current Operator Info Banner -->
+                    <div class="alert alert-info border-0 rounded mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar-md">
+                                    <div class="avatar-title bg-info rounded-circle">
+                                        <i class="ri-user-line text-white fs-20"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading mb-1">Joriy Ma'lumotlar</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Operator ID:</strong> <code class="text-primary">{{ operator.operator_id }}</code></p>
+                                        <p class="mb-1"><strong>Username:</strong> {{ operator.user.username }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Holati:</strong> 
+                                            {% if operator.user.is_active %}
+                                                <span class="badge bg-success">Faol</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Nofaol</span>
+                                            {% endif %}
+                                        </p>
+                                        <p class="mb-0"><strong>Oxirgi kirish:</strong> {{ operator.user.last_login|date:"d.m.Y H:i"|default:"Hech qachon" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Display Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <i class="ri-{% if message.tags == 'success' %}check-line{% elif message.tags == 'error' %}error-warning-line{% else %}information-line{% endif %} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Form -->
+                    <form method="post" class="needs-validation" novalidate id="editOperatorForm">
+                        {% csrf_token %}
+
+                        <!-- Personal Information -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="card-title mb-3">
+                                    <i class="ri-user-line me-2 text-info"></i>Shaxsiy Ma'lumotlar
+                                </h5>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="full_name" class="form-label">To'liq ism familiya <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="full_name" name="full_name" 
+                                           value="{{ operator.full_name }}" placeholder="Ism Familiya" required>
+                                    <div class="invalid-feedback">
+                                        To'liq ism familiya majburiy
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email manzil <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ operator.user.email }}" placeholder="operator@company.com" required>
+                                    <div class="form-text">Operator bilan aloqa uchun</div>
+                                    <div class="invalid-feedback">
+                                        To'g'ri email manzil kiriting
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Telefon raqami</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           value="{{ operator.phone }}" placeholder="+998 90 123 45 67">
+                                    <div class="form-text">Aloqa uchun telefon raqami</div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">Lavozim</label>
+                                    <select class="form-select" id="position" name="position">
+                                        <option value="Operator" {% if operator.position == 'Operator' %}selected{% endif %}>Operator</option>
+                                        <option value="Senior Operator" {% if operator.position == 'Senior Operator' %}selected{% endif %}>Senior Operator</option>
+                                        <option value="Call Center Agent" {% if operator.position == 'Call Center Agent' %}selected{% endif %}>Call Center Agent</option>
+                                        <option value="Customer Service" {% if operator.position == 'Customer Service' %}selected{% endif %}>Customer Service</option>
+                                        <option value="Technical Support" {% if operator.position == 'Technical Support' %}selected{% endif %}>Technical Support</option>
+                                        <option value="Sales Representative" {% if operator.position == 'Sales Representative' %}selected{% endif %}>Sales Representative</option>
+                                    </select>
+                                    <div class="form-text">Operator lavozimi</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Work Information -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="card-title mb-3">
+                                    <i class="ri-briefcase-line me-2 text-warning"></i>Ish Ma'lumotlari
+                                </h5>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="operator_id_display" class="form-label">Operator ID</label>
+                                    <input type="text" class="form-control" id="operator_id_display" 
+                                           value="{{ operator.operator_id }}" disabled>
+                                    <div class="form-text text-muted">
+                                        <i class="ri-lock-line me-1"></i>Operator ID o'zgartirilmaydi
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="username_display" class="form-label">Foydalanuvchi nomi</label>
+                                    <input type="text" class="form-control" id="username_display" 
+                                           value="{{ operator.user.username }}" disabled>
+                                    <div class="form-text text-muted">
+                                        <i class="ri-lock-line me-1"></i>Username o'zgartirilmaydi
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="department" class="form-label">Bo'lim</label>
+                                    <input type="text" class="form-control" id="department" name="department" 
+                                           value="{{ operator.department }}" placeholder="Call Center" list="departments">
+                                    <datalist id="departments">
+                                        <option value="Call Center">
+                                        <option value="Customer Service">
+                                        <option value="Technical Support">
+                                        <option value="Sales">
+                                        <option value="Marketing">
+                                        <option value="Support">
+                                    </datalist>
+                                    <div class="form-text">Operator ishlayotgan bo'lim</div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="created_at" class="form-label">Ro'yxatdan o'tgan sana</label>
+                                    <input type="text" class="form-control" id="created_at" 
+                                           value="{{ operator.created_at|date:'d.m.Y H:i' }}" disabled>
+                                    <div class="form-text text-muted">Operator qo'shilgan vaqt</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Status Settings -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="card-title mb-3">
+                                    <i class="ri-settings-3-line me-2 text-success"></i>Holat Sozlamalari
+                                </h5>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                           {% if operator.user.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">
+                                        <strong>Operator faol</strong>
+                                        <div class="text-muted">Faol operatorlar tizimga kirishga va qo'ng'iroqlar bilan ishlashga ruxsat berilgan</div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {% if not operator.user.is_active %}
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-alert-line me-2"></i>
+                                        <div>
+                                            <strong>Diqqat!</strong> Bu operator hozirda nofaol holatda. 
+                                            Faollashtirish uchun yuqoridagi kalitni yoqing.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Password Reset Section -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 class="card-title mb-3">
+                                    <i class="ri-lock-line me-2 text-danger"></i>Parol Sozlamalari
+                                </h5>
+                                <div class="alert alert-light">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-information-line me-2 text-info"></i>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-2">Operator parolini o'zgartirish uchun alohida sahifa mavjud.</p>
+                                            <a href="#" class="btn btn-soft-danger btn-sm" onclick="resetPassword()">
+                                                <i class="ri-lock-unlock-line me-1"></i>Parolni tiklash
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="hstack gap-2 justify-content-end">
+                                    <a href="{% url 'operator_detail' operator.id %}" class="btn btn-light">
+                                        <i class="ri-arrow-left-line me-1"></i>Bekor qilish
+                                    </a>
+                                    <button type="button" class="btn btn-soft-primary" id="previewBtn">
+                                        <i class="ri-eye-line me-1"></i>Ko'rib chiqish
+                                    </button>
+                                    <button type="submit" class="btn btn-warning" id="submitBtn">
+                                        <i class="ri-save-line me-1"></i>
+                                        <span class="spinner-border spinner-border-sm me-1 d-none" id="submitSpinner"></span>
+                                        O'zgarishlarni saqlash
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Statistics Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-bar-chart-line me-2"></i>Operator Statistikalari
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-primary mb-1">{{ operator.today_calls_count|default:0 }}</h4>
+                                <p class="text-muted mb-0">Bugungi qo'ng'iroqlar</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-success mb-1">{{ operator.success_rate|default:0 }}%</h4>
+                                <p class="text-muted mb-0">Muvaffaqiyat darajasi</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-info mb-1">{{ operator.user.last_login|timesince|default:"Hech qachon" }}</h4>
+                                <p class="text-muted mb-0">Oxirgi faollik</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-warning mb-1">{{ operator.created_at|timesince }}</h4>
+                                <p class="text-muted mb-0">Qo'shilganiga</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Important Information -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-sm">
+                                <div class="avatar-title rounded-circle bg-info">
+                                    <i class="ri-information-line text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Muhim ma'lumotlar:</h6>
+                            <ul class="text-muted mb-0 ps-3">
+                                <li>Operator ID va Username o'zgartirilmaydi - bu tizim xavfsizligi uchun</li>
+                                <li>Email manzil operator bilan aloqa o'rnatish uchun ishlatiladi</li>
+                                <li>Nofaol operatorlar tizimga kirishga ruxsat olmaydi</li>
+                                <li>O'zgarishlar darhol kuchga kiradi</li>
+                                <li>Parolni o'zgartirish uchun alohida tugma ishlatiladi</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">
+                    <i class="ri-eye-line me-2"></i>O'zgarishlarni Ko'rib Chiqish
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="previewContent">
+                    <!-- Preview content will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">O'zgartirish</button>
+                <button type="button" class="btn btn-warning" onclick="submitForm()">
+                    <i class="ri-check-line me-1"></i>Tasdiqlash va Saqlash
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock main_content %}
+
+{% block extra_css %}
+<style>
+.form-control:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+.form-control:disabled {
+    background-color: #f8f9fa;
+    opacity: 1;
+}
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.hstack {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.gap-2 > * + * {
+    margin-left: 0.5rem !important;
+}
+
+.justify-content-end {
+    justify-content: flex-end !important;
+}
+
+.was-validated .form-control:valid {
+    border-color: #198754;
+}
+
+.was-validated .form-control:invalid {
+    border-color: #dc3545;
+}
+
+.card-title {
+    color: #495057;
+    font-weight: 600;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+.alert-light {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.getElementById('editOperatorForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitSpinner = document.getElementById('submitSpinner');
+    
+    // Phone number formatting
+    const phoneInput = document.getElementById('phone');
+    phoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.startsWith('998')) {
+            value = value.substring(3);
+        }
+        if (value.length > 0) {
+            if (value.length <= 2) {
+                value = `+998 ${value}`;
+            } else if (value.length <= 5) {
+                value = `+998 ${value.substring(0, 2)} ${value.substring(2)}`;
+            } else if (value.length <= 7) {
+                value = `+998 ${value.substring(0, 2)} ${value.substring(2, 5)} ${value.substring(5)}`;
+            } else {
+                value = `+998 ${value.substring(0, 2)} ${value.substring(2, 5)} ${value.substring(5, 7)} ${value.substring(7, 9)}`;
+            }
+        }
+        e.target.value = value;
+    });
+
+    // Preview functionality
+    document.getElementById('previewBtn').addEventListener('click', function() {
+        const formData = new FormData(form);
+        let previewHTML = '';
+        
+        // Compare with original values
+        const originalValues = {
+            full_name: '{{ operator.full_name }}',
+            email: '{{ operator.user.email }}',
+            phone: '{{ operator.phone }}',
+            position: '{{ operator.position }}',
+            department: '{{ operator.department }}',
+            is_active: {{ operator.user.is_active|yesno:'true,false' }}
+        };
+        
+        let hasChanges = false;
+        let changedFields = [];
+        
+        // Check for changes
+        Object.keys(originalValues).forEach(key => {
+            const newValue = key === 'is_active' ? formData.has(key) : formData.get(key);
+            const oldValue = originalValues[key];
+            
+            if (newValue != oldValue) {
+                hasChanges = true;
+                changedFields.push(key);
+            }
+        });
+        
+        if (!hasChanges) {
+            previewHTML = `
+                <div class="col-12 text-center">
+                    <div class="alert alert-info">
+                        <i class="ri-information-line me-2"></i>
+                        Hech qanday o'zgarish aniqlanmadi
+                    </div>
+                </div>
+            `;
+        } else {
+            previewHTML += `
+                <div class="col-12 mb-3">
+                    <div class="alert alert-warning">
+                        <strong>O'zgarishlar:</strong> ${changedFields.length} ta maydon o'zgartirildi
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-info">Yangi Ma'lumotlar</h6>
+                    <p><strong>To'liq ism:</strong> ${formData.get('full_name') || 'Belgilanmagan'}</p>
+                    <p><strong>Email:</strong> ${formData.get('email') || 'Belgilanmagan'}</p>
+                    <p><strong>Telefon:</strong> ${formData.get('phone') || 'Belgilanmagan'}</p>
+                    <p><strong>Lavozim:</strong> ${formData.get('position') || 'Belgilanmagan'}</p>
+                    <p><strong>Bo'lim:</strong> ${formData.get('department') || 'Belgilanmagan'}</p>
+                    <p><strong>Holati:</strong> ${formData.get('is_active') ? 'Faol' : 'Nofaol'}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted">Eski Ma'lumotlar</h6>
+                    <p><strong>To'liq ism:</strong> ${originalValues.full_name || 'Belgilanmagan'}</p>
+                    <p><strong>Email:</strong> ${originalValues.email || 'Belgilanmagan'}</p>
+                    <p><strong>Telefon:</strong> ${originalValues.phone || 'Belgilanmagan'}</p>
+                    <p><strong>Lavozim:</strong> ${originalValues.position || 'Belgilanmagan'}</p>
+                    <p><strong>Bo'lim:</strong> ${originalValues.department || 'Belgilanmagan'}</p>
+                    <p><strong>Holati:</strong> ${originalValues.is_active ? 'Faol' : 'Nofaol'}</p>
+                </div>
+            `;
+        }
+        
+        document.getElementById('previewContent').innerHTML = previewHTML;
+        new bootstrap.Modal(document.getElementById('previewModal')).show();
+    });
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!form.checkValidity()) {
+            e.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitSpinner.classList.remove('d-none');
+
+        const formData = new FormData(form);
+
+        fetch(form.action || window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Success
+                const successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success alert-dismissible fade show';
+                successAlert.innerHTML = `
+                    <i class="ri-check-line me-2"></i>${data.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                form.insertBefore(successAlert, form.firstChild);
+                
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '{% url "operator_detail" operator.id %}';
+                }, 2000);
+            } else {
+                // Error
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+                errorAlert.innerHTML = `
+                    <i class="ri-error-warning-line me-2"></i>${data.error}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                form.insertBefore(errorAlert, form.firstChild);
+            }
+        })
+        .catch(error => {
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+            errorAlert.innerHTML = `
+                <i class="ri-error-warning-line me-2"></i>Xatolik yuz berdi. Iltimos qayta urinib ko'ring.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            form.insertBefore(errorAlert, form.firstChild);
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitSpinner.classList.add('d-none');
+        });
+    });
+});
+
+// Submit from modal
+function submitForm() {
+    document.getElementById('previewModal').querySelector('.btn-close').click();
+    document.getElementById('editOperatorForm').dispatchEvent(new Event('submit'));
+}
+
+// Reset password function
+function resetPassword() {
+    if (confirm('Operator uchun parolni tiklash tasdiqlaysizmi? Yangi parol operatorga email orqali yuboriladi.')) {
+        // This would need to be implemented in your backend
+        fetch(`/operators/{{ operator.id }}/reset-password/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Parol muvaffaqiyatli tiklandi va operatorga yuborildi');
+            } else {
+                alert('Xatolik: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Xatolik yuz berdi');
+        });
+    }
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

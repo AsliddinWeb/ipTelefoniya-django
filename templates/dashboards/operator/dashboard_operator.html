@@ -1,0 +1,514 @@
+{% extends 'dashboards/operator/base_operator.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col">
+            <div class="h-100">
+                <div class="row mb-3 pb-1">
+                    <div class="col-12">
+                        <div class="d-flex align-items-lg-center flex-lg-row flex-column">
+                            <div class="flex-grow-1">
+                                <h4 class="fs-16 mb-1">Xayrli tong, {{ user.username|title }}!</h4>
+                                <p class="text-muted mb-0">Bugungi qo'ng'iroqlar statistikasi - {{ operator_info.operator_id }}</p>
+                            </div>
+                            <div class="mt-3 mt-lg-0">
+                                <form action="javascript:void(0);">
+                                    <div class="row g-3 mb-0 align-items-center">
+                                        <div class="col-sm-auto">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control border-0 minimal-border dash-filter-picker shadow"
+                                                       data-provider="flatpickr" data-range-date="true" data-date-format="d M, Y"
+                                                       data-deafult-date="{{ date_info.last_week|date:'d M, Y' }} to {{ date_info.today|date:'d M, Y' }}">
+                                                <div class="input-group-text bg-primary border-primary text-white">
+                                                    <i class="ri-calendar-2-line"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="button" class="btn btn-soft-success material-shadow-none" onclick="window.location.reload()">
+                                                <i class="ri-refresh-line align-middle me-1"></i> Yangilash
+                                            </button>
+                                        </div>
+                                        {% if pbx_data.system_status %}
+                                        <div class="col-auto">
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="ri-radio-button-fill"></i> Tizim faol
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-animate">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Jami qo'ng'iroqlar</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <h5 class="{% if pbx_data.total_calls_growth >= 0 %}text-success{% else %}text-danger{% endif %} fs-14 mb-0">
+                                            <i class="ri-arrow-right-{% if pbx_data.total_calls_growth >= 0 %}up{% else %}down{% endif %}-line fs-13 align-middle"></i>
+                                            {% if pbx_data.total_calls_growth >= 0 %}+{% endif %}{{ pbx_data.total_calls_growth }}%
+                                        </h5>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-end justify-content-between mt-4">
+                                    <div>
+                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                            <span class="counter-value" data-target="{{ pbx_data.total_calls }}">{{ pbx_data.total_calls }}</span>
+                                        </h4>
+                                        <a href="{% url 'calls_list' %}" class="text-decoration-underline">Batafsil ko'rish</a>
+                                    </div>
+                                    <div class="avatar-sm flex-shrink-0">
+                                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                                            <i class="ri-phone-line text-success"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-animate">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Javob berilgan</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <h5 class="{% if pbx_data.answered_calls_growth >= 0 %}text-success{% else %}text-danger{% endif %} fs-14 mb-0">
+                                            <i class="ri-arrow-right-{% if pbx_data.answered_calls_growth >= 0 %}up{% else %}down{% endif %}-line fs-13 align-middle"></i>
+                                            {% if pbx_data.answered_calls_growth >= 0 %}+{% endif %}{{ pbx_data.answered_calls_growth }}%
+                                        </h5>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-end justify-content-between mt-4">
+                                    <div>
+                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                            <span class="counter-value" data-target="{{ pbx_data.answered_calls }}">{{ pbx_data.answered_calls }}</span>
+                                        </h4>
+                                        <a href="{% url 'calls_list' %}" class="text-decoration-underline">Batafsil ko'rish</a>
+                                    </div>
+                                    <div class="avatar-sm flex-shrink-0">
+                                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                                            <i class="ri-phone-fill text-info"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-animate">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Javobsiz qo'ng'iroqlar</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <h5 class="text-warning fs-14 mb-0">
+                                            {{ pbx_data.no_answer_calls }}
+                                        </h5>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-end justify-content-between mt-4">
+                                    <div>
+                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                            <span class="counter-value" data-target="{{ pbx_data.no_answer_calls }}">{{ pbx_data.no_answer_calls }}</span>
+                                        </h4>
+                                        <a href="{% url 'calls_list' %}" class="text-decoration-underline">Batafsil ko'rish</a>
+                                    </div>
+                                    <div class="avatar-sm flex-shrink-0">
+                                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                                            <i class="ri-phone-lock-line text-warning"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card card-animate">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">O'rtacha davomiyligi</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <h5 class="{% if pbx_data.duration_growth >= 0 %}text-success{% else %}text-danger{% endif %} fs-14 mb-0">
+                                            {% if pbx_data.duration_growth >= 0 %}+{% endif %}{{ pbx_data.duration_growth }}%
+                                        </h5>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-end justify-content-between mt-4">
+                                    <div>
+                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                                            <span class="counter-value" data-target="{{ pbx_data.avg_duration }}">{{ pbx_data.avg_duration }}</span>s
+                                        </h4>
+                                        <a href="{% url 'calls_list' %}" class="text-decoration-underline">Batafsil ko'rish</a>
+                                    </div>
+                                    <div class="avatar-sm flex-shrink-0">
+                                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                                            <i class="ri-time-line text-primary"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Recent Calls Table -->
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-header align-items-center d-flex">
+                                <h4 class="card-title mb-0 flex-grow-1">So'nggi qo'ng'iroqlar</h4>
+                                <div class="flex-shrink-0">
+                                    <a href="{% url 'calls_list' %}" class="btn btn-soft-info btn-sm material-shadow-none me-2">
+                                        <i class="ri-eye-line align-middle"></i> Barchasini ko'rish
+                                    </a>
+                                    <button type="button" class="btn btn-soft-success btn-sm material-shadow-none">
+                                        <i class="ri-file-list-3-line align-middle"></i> Hisobot yaratish
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                {% if pbx_error %}
+                                    <div class="alert alert-warning" role="alert">
+                                        <i class="ri-alert-line me-2"></i>
+                                        PBX bilan bog'lanishda xatolik: {{ pbx_error }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="table-responsive table-card">
+                                    <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                                        <thead class="text-muted table-light">
+                                            <tr>
+                                                <th scope="col">Sana</th>
+                                                <th scope="col">Qo'ng'iroq qiluvchi</th>
+                                                <th scope="col">Qabul qiluvchi</th>
+                                                <th scope="col">Davomiyligi</th>
+                                                <th scope="col">Holati</th>
+                                                <th scope="col">Yo'nalish</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for call in pbx_data.recent_calls %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="mb-0">{{ call.calldate|date:"d.m.Y" }}</h6>
+                                                            <small class="text-muted">{{ call.calldate|date:"H:i:s" }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-shrink-0 me-2">
+                                                            <div class="avatar-xs">
+                                                                <div class="avatar-title rounded-circle bg-light
+                                                                    {% if call.src|length <= 4 %}text-primary{% else %}text-warning{% endif %}">
+                                                                    <i class="{% if call.src|length <= 4 %}ri-user-line{% else %}ri-phone-line{% endif %}"></i>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="mb-0">
+                                                                {% if call.cnam %}{{ call.cnam }}{% else %}{{ call.src }}{% endif %}
+                                                            </h6>
+                                                            <small class="text-muted">{{ call.src }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-medium">{{ call.dst }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="{% if call.duration|add:0 > 10 %}text-success{% elif call.duration|add:0 > 0 %}text-warning{% else %}text-danger{% endif %}">
+                                                        {{ call.duration }}s
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if call.disposition == 'ANSWERED' %}
+                                                        <span class="badge bg-success-subtle text-success">Javob berildi</span>
+                                                    {% elif call.disposition == 'NO ANSWER' %}
+                                                        <span class="badge bg-warning-subtle text-warning">Javobsiz</span>
+                                                    {% elif call.disposition == 'FAILED' %}
+                                                        <span class="badge bg-danger-subtle text-danger">Muvaffaqiyatsiz</span>
+                                                    {% elif call.disposition == 'CONGESTION' %}
+                                                        <span class="badge bg-danger-subtle text-danger">Band</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary-subtle text-secondary">{{ call.disposition }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if call.src|length <= 4 and call.dst|length <= 4 %}
+                                                        <span class="badge bg-success-subtle text-success">
+                                                            <i class="ri-arrow-left-right-line me-1"></i>Ichki
+                                                        </span>
+                                                    {% elif call.src|length <= 4 %}
+                                                        <span class="badge bg-warning-subtle text-warning">
+                                                            <i class="ri-arrow-up-line me-1"></i>Chiquvchi
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-info-subtle text-info">
+                                                            <i class="ri-arrow-down-line me-1"></i>Kiruvchi
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="6" class="text-center py-4">
+                                                    <div class="text-muted">
+                                                        <i class="ri-phone-line fs-1 d-block mb-2"></i>
+                                                        Hozircha qo'ng'iroqlar yo'q
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Call Status Distribution -->
+                <div class="row">
+                    <div class="col-xl-6">
+                        <div class="card card-height-100">
+                            <div class="card-header align-items-center d-flex">
+                                <h4 class="card-title mb-0 flex-grow-1">Qo'ng'iroq holatlari</h4>
+                                <div class="flex-shrink-0">
+                                    <a href="{% url 'calls_list' %}" class="btn btn-soft-primary btn-sm">
+                                        <i class="ri-eye-line me-1"></i>Batafsil
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="text-center mb-3">
+                                            <h5 class="mb-1 text-success">{{ pbx_data.answered_calls }}</h5>
+                                            <p class="text-muted mb-0">Javob berilgan</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center mb-3">
+                                            <h5 class="mb-1 text-warning">{{ pbx_data.no_answer_calls }}</h5>
+                                            <p class="text-muted mb-0">Javobsiz</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center mb-3">
+                                            <h5 class="mb-1 text-danger">{{ pbx_data.failed_calls }}</h5>
+                                            <p class="text-muted mb-0">Muvaffaqiyatsiz</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center mb-3">
+                                            <h5 class="mb-1 text-info">{{ pbx_data.success_rate }}%</h5>
+                                            <p class="text-muted mb-0">Muvaffaqiyat foizi</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if pbx_data.current_active_calls %}
+                                <div class="alert alert-info mt-3" role="alert">
+                                    <i class="ri-phone-fill me-2"></i>
+                                    Hozir {{ pbx_data.current_active_calls }} ta faol qo'ng'iroq
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-6">
+                        <div class="card card-height-100">
+                            <div class="card-header align-items-center d-flex">
+                                <h4 class="card-title mb-0 flex-grow-1">Eng faol raqamlar</h4>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="table-responsive table-card">
+                                    <table class="table table-centered table-hover align-middle table-nowrap mb-0">
+                                        <tbody>
+                                            {% for number in pbx_data.most_active_numbers %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-shrink-0 me-2">
+                                                            <div class="avatar-xs">
+                                                                <div class="avatar-title rounded-circle
+                                                                    {% if forloop.first %}bg-primary{% elif forloop.counter == 2 %}bg-info{% else %}bg-warning{% endif %}">
+                                                                    <i class="{% if number.number|length <= 4 %}ri-user-line{% else %}ri-phone-line{% endif %} text-white"></i>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="fs-14 my-1 fw-medium">
+                                                                {% if number.name %}{{ number.name }} ({{ number.number }}){% else %}{{ number.number }}{% endif %}
+                                                            </h6>
+                                                            <span class="text-muted">
+                                                                {% if number.number|length <= 4 %}Ichki foydalanuvchi{% else %}Tashqi raqam{% endif %}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <p class="mb-0 text-success">{{ number.call_count }}</p>
+                                                    <span class="text-muted">Qo'ng'iroqlar</span>
+                                                </td>
+                                                <td>
+                                                    <h5 class="fs-14 mb-0">
+                                                        {{ number.success_rate|floatformat:0 }}%
+                                                        <i class="ri-bar-chart-fill text-{% if number.success_rate >= 80 %}success{% elif number.success_rate >= 50 %}warning{% else %}danger{% endif %} fs-16 align-middle ms-2"></i>
+                                                    </h5>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="3" class="text-center py-3">
+                                                    <span class="text-muted">Ma'lumot yo'q</span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {% if operator_info.extensions %}
+                                <div class="mt-3 pt-3 border-top">
+                                    <h6 class="text-muted mb-2">Sizning raqamlaringiz:</h6>
+                                    {% for ext in operator_info.extensions %}
+                                        <span class="badge bg-primary-subtle text-primary me-1">{{ ext }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operator Info -->
+                {% if operator_info %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-md me-3">
+                                                <div class="avatar-title rounded-circle bg-primary">
+                                                    <i class="ri-settings-line fs-20 text-white"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h5 class="mb-1">Operator ma'lumotlari</h5>
+                                                <p class="text-muted mb-0">
+                                                    <strong>ID:</strong> {{ operator_info.operator_id }} |
+                                                    <strong>Domen:</strong> {{ operator_info.domen }} |
+                                                    <strong>Telefon:</strong> {{ operator_info.phone }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                        <div class="text-muted">
+                                            <small>Bugungi faoliyat: {{ pbx_data.operator_today_calls }} ta qo'ng'iroq</small>
+                                        </div>
+                                        <a href="{% url 'profile' %}" class="btn btn-soft-primary btn-sm mt-2">
+                                            <i class="ri-user-line me-1"></i>Profilni ko'rish
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+
+{% block extra_css %}
+<style>
+.card-animate {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-animate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.counter-value {
+    transition: all 0.3s ease;
+}
+
+.border-2 {
+    border-width: 2px !important;
+}
+
+.fs-2 {
+    font-size: 1.5rem;
+}
+
+.table-card {
+    max-height: 400px;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Counter animation
+document.addEventListener('DOMContentLoaded', function() {
+    const counters = document.querySelectorAll('.counter-value');
+
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const increment = target / 50;
+        let current = 0;
+
+        const updateCounter = () => {
+            if (current < target) {
+                current += increment;
+                counter.textContent = Math.floor(current);
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target;
+            }
+        };
+
+        updateCounter();
+    });
+});
+</script>
+{% endblock %}

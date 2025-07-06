@@ -1,0 +1,360 @@
+{% extends 'profiles/base_profile.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Profil Yaratish</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Profil Yaratish</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Create Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-sm">
+                                <div class="avatar-title rounded-circle bg-light text-primary">
+                                    <i class="ri-user-add-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4 class="card-title mb-1">{{ user.role|title }} Profil Yaratish</h4>
+                            <p class="text-muted mb-0">Quyidagi ma'lumotlarni to'ldiring</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Display messages -->
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    <i class="ri-{% if message.tags == 'success' %}check-line{% elif message.tags == 'error' %}error-warning-line{% else %}information-line{% endif %} me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- Common Fields - Full Name -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-4">
+                                    <label for="full_name" class="form-label">To'liq ism <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" id="full_name" name="full_name"
+                                           placeholder="To'liq ismingizni kiriting" required>
+                                    <div class="invalid-feedback">
+                                        Iltimos, to'liq ismingizni kiriting
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Role-specific fields -->
+                        {% if user.role == 'admin' %}
+                            <!-- Admin Profile - only full_name required -->
+                            <div class="alert alert-info">
+                                <i class="ri-information-line me-2"></i>
+                                <strong>Admin profil:</strong> Faqat to'liq ism talab qilinadi.
+                            </div>
+
+                        {% elif user.role == 'monitoring' %}
+                            <!-- Monitoring Profile - only full_name required -->
+                            <div class="alert alert-info">
+                                <i class="ri-eye-line me-2"></i>
+                                <strong>Monitoring profil:</strong> Faqat to'liq ism talab qilinadi.
+                            </div>
+
+                        {% elif user.role == 'operator' %}
+                            <!-- Operator Profile Fields -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="card-title mb-3">
+                                        <i class="ri-settings-line me-2"></i>Operator Ma'lumotlari
+                                    </h5>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="domen" class="form-label">Domen</label>
+                                        <input type="text" class="form-control" id="domen" name="domen"
+                                               placeholder="example.com">
+                                        <div class="form-text">Masalan: example.com</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="operator_id" class="form-label">Operator ID</label>
+                                        <input type="text" class="form-control" id="operator_id" name="operator_id"
+                                               placeholder="OP001">
+                                        <div class="form-text">Noyob operator identifikatori</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="phone" class="form-label">Telefon raqami</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone"
+                                               placeholder="+998 90 123 45 67">
+                                    </div>
+                                </div>
+                            </div>
+
+                        {% elif user.role == 'client' %}
+                            <!-- Client Profile Fields -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="card-title mb-3">
+                                        <i class="ri-building-line me-2"></i>Kompaniya Ma'lumotlari
+                                    </h5>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="company_name" class="form-label">Kompaniya nomi</label>
+                                        <input type="text" class="form-control" id="company_name" name="company_name"
+                                               placeholder="ABC Company">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="contact_person" class="form-label">Aloqa shaxsi</label>
+                                        <input type="text" class="form-control" id="contact_person" name="contact_person"
+                                               placeholder="Aloqa uchun javobgar shaxs">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="phone" class="form-label">Telefon raqami</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone"
+                                               placeholder="+998 90 123 45 67">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="subscription_type" class="form-label">Obuna turi</label>
+                                        <select class="form-select" id="subscription_type" name="subscription_type">
+                                            <option value="basic">Asosiy</option>
+                                            <option value="standard">Standart</option>
+                                            <option value="premium">Premium</option>
+                                            <option value="enterprise">Korporativ</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label for="address" class="form-label">Manzil</label>
+                                        <textarea class="form-control" id="address" name="address" rows="3"
+                                                  placeholder="To'liq manzilingizni kiriting..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Subscription Details -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="card-title mb-3">
+                                        <i class="ri-calendar-line me-2"></i>Obuna Ma'lumotlari
+                                    </h5>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="subscription_start" class="form-label">Obuna boshlanish sanasi</label>
+                                        <input type="date" class="form-control" id="subscription_start" name="subscription_start"
+                                               value="{% now 'Y-m-d' %}">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="subscription_end" class="form-label">Obuna tugash sanasi</label>
+                                        <input type="date" class="form-control" id="subscription_end" name="subscription_end">
+                                        <div class="form-text">Bo'sh qoldirish mumkin</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="is_active_subscription"
+                                               name="is_active_subscription" checked>
+                                        <label class="form-check-label" for="is_active_subscription">
+                                            Obuna faol
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="hstack gap-2 justify-content-end">
+                                    <button type="button" class="btn btn-light" onclick="history.back()">
+                                        <i class="ri-arrow-left-line me-1"></i>Orqaga
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="ri-save-line me-1"></i>Profil Yaratish
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Role Information Card -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="avatar-sm">
+                                <div class="avatar-title rounded-circle bg-primary">
+                                    <i class="ri-information-line text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Sizning rolingiz: <span class="badge bg-primary">{{ user.role|title }}</span></h6>
+                            <p class="text-muted mb-0">
+                                {% if user.role == 'admin' %}
+                                    Siz tizim administratori sifatida barcha huquqlarga egasiz.
+                                {% elif user.role == 'monitoring' %}
+                                    Siz monitoring xodimi sifatida tizimni kuzatish huquqiga egasiz.
+                                {% elif user.role == 'operator' %}
+                                    Siz operator sifatida belgilangan domenlarda ishlash huquqiga egasiz.
+                                {% elif user.role == 'client' %}
+                                    Siz mijoz sifatida obuna xizmatlaridan foydalanish huquqiga egasiz.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Form Validation Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    // Auto-set subscription end date when start date changes (for client role)
+    const subscriptionStart = document.getElementById('subscription_start');
+    const subscriptionEnd = document.getElementById('subscription_end');
+
+    if (subscriptionStart && subscriptionEnd) {
+        subscriptionStart.addEventListener('change', function() {
+            if (this.value) {
+                const startDate = new Date(this.value);
+                const endDate = new Date(startDate);
+                endDate.setFullYear(endDate.getFullYear() + 1); // 1 year later
+
+                const year = endDate.getFullYear();
+                const month = String(endDate.getMonth() + 1).padStart(2, '0');
+                const day = String(endDate.getDate()).padStart(2, '0');
+
+                subscriptionEnd.value = `${year}-${month}-${day}`;
+            }
+        });
+    }
+
+    // Phone number formatting
+    const phoneInputs = document.querySelectorAll('input[type="tel"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.startsWith('998')) {
+                value = value.substring(3);
+            }
+            if (value.length > 0) {
+                if (value.length <= 2) {
+                    value = `+998 ${value}`;
+                } else if (value.length <= 5) {
+                    value = `+998 ${value.substring(0, 2)} ${value.substring(2)}`;
+                } else if (value.length <= 7) {
+                    value = `+998 ${value.substring(0, 2)} ${value.substring(2, 5)} ${value.substring(5)}`;
+                } else {
+                    value = `+998 ${value.substring(0, 2)} ${value.substring(2, 5)} ${value.substring(5, 7)} ${value.substring(7, 9)}`;
+                }
+            }
+            e.target.value = value;
+        });
+    });
+});
+</script>
+
+<style>
+.form-control-lg {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+}
+
+.card-title {
+    color: #495057;
+    font-weight: 600;
+}
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.hstack {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.gap-2 > * + * {
+    margin-left: 0.5rem !important;
+}
+
+.justify-content-end {
+    justify-content: flex-end !important;
+}
+</style>
+{% endblock main_content %}
